@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'bundler/setup'
-require 'odbc/adapter'
+require 'odbc_adapter'
 
 require 'irb'
 IRB.start

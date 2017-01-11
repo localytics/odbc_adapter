@@ -1,7 +1,7 @@
 require 'test_helper'
 
-class ODBC::AdapterTest < Minitest::Test
+class ODBCAdapterTest < Minitest::Test
   def test_version
-    refute_nil ::ODBC::Adapter::VERSION
+    refute_nil ODBCAdapter::VERSION
   end
 end

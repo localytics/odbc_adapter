@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'odbc/adapter/version'
+require 'odbc_adapter/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'odbc-adapter'
-  spec.version       = ODBC::Adapter::VERSION
+  spec.name          = 'odbc_adapter'
+  spec.version       = ODBCAdapter::VERSION
   spec.authors       = ['Localytics']
   spec.email         = ['oss@localytics.com']
 
   spec.summary       = 'An ActiveRecord ODBC adapter'
-  spec.homepage      = 'https://github.com/localytics/odbc-adapter'
+  spec.homepage      = 'https://github.com/localytics/odbc_adapter'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|

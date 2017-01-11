@@ -1,4 +1,4 @@
-# ODBC::Adapter
+# ODBCAdapter
 
 An ActiveRecord ODBC adapter.
 
@@ -7,7 +7,7 @@ An ActiveRecord ODBC adapter.
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'odbc-adapter'
+gem 'odbc_adapter'
 ```
 
 And then execute:
@@ -16,7 +16,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install odbc-adapter
+    $ gem install odbc_adapter
 
 ## Usage
 
@@ -28,7 +28,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/localytics/odbc-adapter.
+Bug reports and pull requests are welcome on GitHub at https://github.com/localytics/odbc_adapter.
 
 ## License
 
