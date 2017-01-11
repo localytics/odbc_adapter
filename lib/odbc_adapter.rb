@@ -1,7 +1,7 @@
 require 'active_record'
-require 'active_record/connection_adapters/abstract_adapter'
 require 'arel/visitors/bind_visitor'
 require 'odbc'
+require 'yaml'
 
 require 'active_record/connection_adapters/odbc_adapter'
 

@@ -1,6 +1,8 @@
 module ODBCAdapter
   # Caches SQLGetInfo output
   class DBMS
+    CONFIG = YAML.load_file(File.expand_path(File.join('dbms', 'config.yml'), __dir__))
+
     FIELDS = [
       ODBC::SQL_DBMS_NAME,
       ODBC::SQL_DBMS_VER,
@@ -18,6 +20,10 @@ module ODBCAdapter
     def initialize(connection)
       @connection = connection
       @fields     = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
+    end
+
+    def config_for(field)
+      CONFIG[name][field]
     end
 
     def ext_module

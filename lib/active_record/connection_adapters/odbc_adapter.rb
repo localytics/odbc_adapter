@@ -56,14 +56,13 @@ module ActiveRecord
     class ODBCAdapter < AbstractAdapter
       ADAPTER_NAME = 'ODBC'.freeze
 
-      attr_reader :convert_numeric_literals, :dbms, :emulate_booleans
+      attr_reader :dbms, :options
 
       def initialize(connection, logger, options)
         super(connection, logger)
 
-        @connection       = connection
-        @conv_num_lits    = options[:conv_num_lits]
-        @emulate_booleans = options[:emulate_booleans]
+        @connection = connection
+        @options    = options
 
         @dbms    = ::ODBCAdapter::DBMS.new(connection)
         @visitor = dbms.visitor(self)
@@ -72,6 +71,32 @@ module ActiveRecord
 
       def adapter_name
         ADAPTER_NAME
+      end
+
+      def supports_migrations?
+        true
+      end
+
+      def prefetch_primary_key?(table_name = nil)
+        dbms.config_for(:has_autoincrement_col)
+      end
+
+      def active?
+        @connection.connected?
+      end
+
+      def reconnect!
+        @connection.disconnect if @connection.connected?
+        @connection =
+          if options.key?(:dsn)
+            ODBC.connect(options[:dsn], options[:username], options[:password])
+          else
+            ODBC::Database.new.drvconnect(options[:driver])
+          end
+      end
+
+      def disconnect!
+        @connection.disconnect if @connection.connected?
       end
     end
   end
