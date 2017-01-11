@@ -1,0 +1,1 @@
+require 'odbc/adapter/version'
