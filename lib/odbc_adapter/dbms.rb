@@ -1,4 +1,5 @@
 module ODBCAdapter
+  # Caches SQLGetInfo output
   class DBMS
     FIELDS = [
       ODBC::SQL_DBMS_NAME,
@@ -12,10 +13,38 @@ module ODBCAdapter
       ODBC::SQL_DATABASE_NAME
     ]
 
-    attr_reader :fields
+    attr_reader :connection, :fields
 
     def initialize(connection)
-      @fields = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
+      @connection = connection
+      @fields     = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
+    end
+
+    def ext_module
+      @ext_module ||=
+        begin
+          require "odbc_adapter/dbms/#{name.downcase}_ext"
+          DBMS.const_get(:"#{name}Ext")
+        end
+    end
+
+    def visitor(adapter)
+      ext_module::BindSubstitution.new(adapter)
+    end
+
+    private
+
+    # Maps a DBMS name to a symbol
+    # Different ODBC drivers might return different names for the same DBMS
+    def name
+      @name ||=
+        case fields[ODBC::SQL_DBMS_NAME].downcase.gsub(/\s/, '')
+        when /my.*sql/i      then :MySQL
+        when /oracle/i       then :Oracle
+        when /postgres/i     then :PostgreSQL
+        else
+          raise ArgumentError, "ODBCAdapter: Unsupported database (#{name})"
+        end
     end
   end
 end
