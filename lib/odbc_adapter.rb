@@ -9,6 +9,7 @@ require 'odbc_adapter/quoting'
 require 'odbc_adapter/schema_statements'
 require 'active_record/connection_adapters/odbc_adapter'
 
+require 'odbc_adapter/column'
 require 'odbc_adapter/column_metadata'
 require 'odbc_adapter/dbms'
 require 'odbc_adapter/version'
