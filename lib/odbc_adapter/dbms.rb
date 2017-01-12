@@ -52,7 +52,6 @@ module ODBCAdapter
           reported = field_for(ODBC::SQL_DBMS_NAME).downcase.gsub(/\s/, '')
           case reported
           when /my.*sql/i               then :MySQL
-          when /oracle/i                then :Oracle
           when /postgres/i, 'snowflake' then :PostgreSQL
           else
             raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported})"

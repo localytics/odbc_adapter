@@ -7,6 +7,8 @@ module ODBCAdapter
         include Arel::Visitors::BindVisitor
       end
 
+      PRIMARY_KEY = 'SERIAL PRIMARY KEY'
+
       # Returns the sequence name for a table's primary key or some other specified key.
       def default_sequence_name(table, column = nil)
         serial_sequence(table_name, column || 'id').split('.').last
