@@ -30,11 +30,18 @@ module ODBCAdapter
     def exec_query(sql, name = 'SQL', binds = [])
       log(sql, name) do
         stmt    = @connection.run(sql)
-        columns = stmt.columns.keys
+        columns = stmt.columns
         values  = stmt.to_a
-
         stmt.drop
-        result = ActiveRecord::Result.new(columns, values)
+
+        casters = TypeCaster.build_from(columns.values)
+        if casters.any?
+          values.each do |row|
+            casters.each { |caster| row[caster.idx] = caster.cast(row[caster.idx]) }
+          end
+        end
+
+        result = ActiveRecord::Result.new(columns.keys, values)
       end
     end
 
