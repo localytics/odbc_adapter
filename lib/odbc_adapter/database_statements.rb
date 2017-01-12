@@ -65,5 +65,26 @@ module ODBCAdapter
     def select(sql, name = nil, binds = [])
       exec_query(sql, name, binds).to_a
     end
+
+    # Returns the last auto-generated ID from the affected table.
+    def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+      begin
+        stmt  = log(sql, name) { @connection.run(sql) }
+        table = extract_table_ref_from_insert_sql(sql)
+
+        seq   = sequence_name || default_sequence_name(table, pk)
+        res   = id_value || last_insert_id(table, seq, stmt)
+      ensure
+        stmt.drop unless stmt.nil?
+      end
+      res
+    end
+
+    private
+
+    def extract_table_ref_from_insert_sql(sql)
+      sql[/into\s+([^\(]*).*values\s*\(/i]
+      $1.strip if $1
+    end
   end
 end

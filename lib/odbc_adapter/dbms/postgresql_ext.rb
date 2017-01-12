@@ -1,17 +1,41 @@
 module ODBCAdapter
   class DBMS
+    # Overrides specific to PostgreSQL. Mostly taken from
+    # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
     module PostgreSQLExt
       class BindSubstitution < Arel::Visitors::PostgreSQL
         include Arel::Visitors::BindVisitor
       end
 
-      # Returns the default sequence name for a table.
-      # Used for databases which don't support an autoincrementing column
-      # type, but do support sequences.
+      # Returns the sequence name for a table's primary key or some other specified key.
       def default_sequence_name(table, column = nil)
         serial_sequence(table_name, column || 'id').split('.').last
       rescue ActiveRecord::StatementInvalid
         "#{table_name}_#{column || 'id'}_seq"
+      end
+
+      # Executes an INSERT query and returns the new record's ID
+      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+        unless pk
+          table_ref = extract_table_ref_from_insert_sql(sql)
+          pk = primary_key(table_ref) if table_ref
+        end
+
+        if pk
+          select_value("#{sql} RETURNING #{quote_column_name(pk)}")
+        else
+          super
+        end
+      end
+
+      def sql_for_insert(sql, pk, id_value, sequence_name, binds)
+        unless pk
+          table_ref = extract_table_ref_from_insert_sql(sql)
+          pk = primary_key(table_ref) if table_ref
+        end
+
+        sql = "#{sql} RETURNING #{quote_column_name(pk)}" if pk
+        [sql, binds]
       end
 
       private

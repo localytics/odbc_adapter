@@ -1,5 +1,7 @@
 module ODBCAdapter
   class DBMS
+    # Overrides specific to PostgreSQL. Mostly taken from
+    # ActiveRecord::ConnectionAdapters::MySQLAdapter
     module MySQLExt
       class BindSubstitution < Arel::Visitors::MySQL
         include Arel::Visitors::BindVisitor
@@ -24,6 +26,17 @@ module ODBCAdapter
           update.table select.source
           update.wheres = select.constraints
         end
+      end
+
+      protected
+
+      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+        super
+        id_value || last_inserted_id(nil)
+      end
+
+      def last_inserted_id(_result)
+        @connection.last_id
       end
     end
   end
