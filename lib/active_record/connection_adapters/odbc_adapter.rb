@@ -30,7 +30,7 @@ module ActiveRecord
       end
 
       # Connect using ODBC connection string
-      # - supports DSN-based or DSN-less connections
+      # Supports DSN-based or DSN-less connections
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
@@ -54,6 +54,8 @@ module ActiveRecord
 
   module ConnectionAdapters
     class ODBCAdapter < AbstractAdapter
+      include ::ODBCAdapter::DatabaseStatements
+
       ADAPTER_NAME = 'ODBC'.freeze
 
       attr_reader :dbms, :options
@@ -69,24 +71,31 @@ module ActiveRecord
         self.extend(dbms.ext_module)
       end
 
+      # Returns the human-readable name of the adapter. Use mixed case - one
+      # can always use downcase if needed.
       def adapter_name
         ADAPTER_NAME
       end
 
+      # Does this adapter support migrations? Backend specific, as the
+      # abstract adapter always returns +false+.
       def supports_migrations?
         true
       end
 
-      def prefetch_primary_key?(table_name = nil)
-        dbms.config_for(:has_autoincrement_col)
-      end
+      # CONNECTION MANAGEMENT ====================================
 
+      # Checks whether the connection to the database is still active. This includes
+      # checking whether the database is actually capable of responding, i.e. whether
+      # the connection isn't stale.
       def active?
         @connection.connected?
       end
 
+      # Disconnects from the database if already connected, and establishes a
+      # new connection with the database.
       def reconnect!
-        @connection.disconnect if @connection.connected?
+        disconnect!
         @connection =
           if options.key?(:dsn)
             ODBC.connect(options[:dsn], options[:username], options[:password])
@@ -95,6 +104,8 @@ module ActiveRecord
           end
       end
 
+      # Disconnects from the database if already connected. Otherwise, this
+      # method does nothing.
       def disconnect!
         @connection.disconnect if @connection.connected?
       end
