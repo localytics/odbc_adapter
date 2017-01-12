@@ -22,8 +22,8 @@ module ODBCAdapter
       @fields     = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
     end
 
-    def config_for(field)
-      CONFIG[name][field]
+    def config_for(config)
+      CONFIG[name][config]
     end
 
     def ext_module
@@ -32,6 +32,10 @@ module ODBCAdapter
           require "odbc_adapter/dbms/#{name.downcase}_ext"
           DBMS.const_get(:"#{name}Ext")
         end
+    end
+
+    def field_for(field)
+      fields[field]
     end
 
     def visitor(adapter)
@@ -44,12 +48,15 @@ module ODBCAdapter
     # Different ODBC drivers might return different names for the same DBMS
     def name
       @name ||=
-        case fields[ODBC::SQL_DBMS_NAME].downcase.gsub(/\s/, '')
-        when /my.*sql/i      then :MySQL
-        when /oracle/i       then :Oracle
-        when /postgres/i     then :PostgreSQL
-        else
-          raise ArgumentError, "ODBCAdapter: Unsupported database (#{name})"
+        begin
+          reported = field_for(ODBC::SQL_DBMS_NAME).downcase.gsub(/\s/, '')
+          case reported
+          when /my.*sql/i               then :MySQL
+          when /oracle/i                then :Oracle
+          when /postgres/i, 'snowflake' then :PostgreSQL
+          else
+            raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported})"
+          end
         end
     end
   end

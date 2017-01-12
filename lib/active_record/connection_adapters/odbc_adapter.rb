@@ -55,6 +55,8 @@ module ActiveRecord
   module ConnectionAdapters
     class ODBCAdapter < AbstractAdapter
       include ::ODBCAdapter::DatabaseStatements
+      include ::ODBCAdapter::Quoting
+      include ::ODBCAdapter::SchemaStatements
 
       ADAPTER_NAME = 'ODBC'.freeze
 

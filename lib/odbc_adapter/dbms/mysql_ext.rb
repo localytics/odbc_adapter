@@ -28,6 +28,12 @@ module ODBCAdapter
         end
       end
 
+      # Quotes a string, escaping any ' (single quote) and \ (backslash)
+      # characters.
+      def quote_string(string)
+        string.gsub(/\\/, '\&\&').gsub(/'/, "''")
+      end
+
       protected
 
       def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
