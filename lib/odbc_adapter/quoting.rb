@@ -1,5 +1,44 @@
 module ODBCAdapter
   module Quoting
+    # Quotes the column value to help prevent
+    # {SQL injection attacks}[http://en.wikipedia.org/wiki/SQL_injection].
+    def quote(value, column = nil)
+      # records are quoted as their primary key
+      return value.quoted_id if value.respond_to?(:quoted_id)
+
+      case value
+      when String, ActiveSupport::Multibyte::Chars
+        value = value.to_s
+        return "'#{quote_string(value)}'" unless column
+
+        case column.type
+        when :binary then "'#{quote_string(column.string_to_binary(value))}'"
+        when :integer then value.to_i.to_s
+        when :float then value.to_f.to_s
+        else
+          "'#{quote_string(value)}'"
+        end
+
+      when true, false
+        if column && column.type == :integer
+          value ? '1' : '0'
+        else
+          value ? quoted_true : quoted_false
+        end
+        # BigDecimals need to be put in a non-normalized form and quoted.
+      when nil        then "NULL"
+      when BigDecimal then value.to_s('F')
+      when Numeric    then value.to_s
+      when Symbol     then "'#{quote_string(value.to_s)}'"
+      else
+        if value.acts_like?(:date) || value.acts_like?(:time)
+          quoted_date(value)
+        else
+          super
+        end
+      end
+    end
+
     # Quotes a string, escaping any ' (single quote) characters.
     def quote_string(string)
       string.gsub(/\'/, "''")
