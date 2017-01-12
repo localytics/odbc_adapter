@@ -54,6 +54,7 @@ module ActiveRecord
 
   module ConnectionAdapters
     class ODBCAdapter < AbstractAdapter
+      include ::ODBCAdapter::DatabaseLimits
       include ::ODBCAdapter::DatabaseStatements
       include ::ODBCAdapter::Quoting
       include ::ODBCAdapter::SchemaStatements

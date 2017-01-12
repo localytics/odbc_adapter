@@ -64,6 +64,95 @@ module ODBCAdapter
         "'f'"
       end
 
+      def disable_referential_integrity #:nodoc:
+        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
+        yield
+      ensure
+        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+      end
+
+      # Create a new PostgreSQL database. Options include <tt>:owner</tt>, <tt>:template</tt>,
+      # <tt>:encoding</tt>, <tt>:tablespace</tt>, and <tt>:connection_limit</tt> (note that MySQL
+      # uses <tt>:charset</tt> while PostgreSQL uses <tt>:encoding</tt>).
+      #
+      # Example:
+      #   create_database config[:database], config
+      #   create_database 'foo_development', :encoding => 'unicode'
+      def create_database(name, options = {})
+        options = options.reverse_merge(encoding: 'utf8')
+
+        option_string = options.symbolize_keys.sum do |key, value|
+          case key
+          when :owner
+            " OWNER = \"#{value}\""
+          when :template
+            " TEMPLATE = \"#{value}\""
+          when :encoding
+            " ENCODING = '#{value}'"
+          when :tablespace
+            " TABLESPACE = \"#{value}\""
+          when :connection_limit
+            " CONNECTION LIMIT = #{value}"
+          else
+            ""
+          end
+        end
+
+        execute("CREATE DATABASE #{quote_table_name(name)}#{option_string}")
+      end
+
+      # Drops a PostgreSQL database.
+      #
+      # Example:
+      #   drop_database 'matt_development'
+      def drop_database(name) #:nodoc:
+        execute "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
+      end
+
+      # Renames a table.
+      def rename_table(name, new_name)
+        execute("ALTER TABLE #{quote_table_name(name)} RENAME TO #{quote_table_name(new_name)}")
+      end
+
+      def change_column(table_name, column_name, type, options = {})
+        execute("ALTER TABLE #{table_name} ALTER  #{column_name} TYPE #{type_to_sql(type, options[:limit], options[:precision], options[:scale])}")
+        change_column_default(table_name, column_name, options[:default]) if options_include_default?(options)
+      end
+
+      def change_column_default(table_name, column_name, default)
+        execute("ALTER TABLE #{table_name} ALTER COLUMN #{column_name} SET DEFAULT #{quote(default)}")
+      end
+
+      def rename_column(table_name, column_name, new_column_name)
+        execute("ALTER TABLE #{table_name} RENAME #{column_name} TO #{new_column_name}")
+      end
+
+      def remove_index!(_table_name, index_name)
+        execute("DROP INDEX #{quote_table_name(index_name)}")
+      end
+
+      def rename_index(table_name, old_name, new_name)
+        execute("ALTER INDEX #{quote_column_name(old_name)} RENAME TO #{quote_table_name(new_name)}")
+      end
+
+      # Returns a SELECT DISTINCT clause for a given set of columns and a given ORDER BY clause.
+      #
+      # PostgreSQL requires the ORDER BY columns in the select list for distinct queries, and
+      # requires that the ORDER BY include the distinct column.
+      #
+      #   distinct("posts.id", "posts.created_at desc")
+      def distinct(columns, orders)
+        return "DISTINCT #{columns}" if orders.empty?
+
+        # Construct a clean list of column names from the ORDER BY clause, removing
+        # any ASC/DESC modifiers
+        order_columns = orders.map { |s| s.gsub(/\s+(ASC|DESC)\s*(NULLS\s+(FIRST|LAST)\s*)?/i, '') }
+        order_columns.reject! { |c| c.blank? }
+        order_columns = order_columns.zip((0...order_columns.size).to_a).map { |s,i| "#{s} AS alias_#{i}" }
+
+        "DISTINCT #{columns}, #{order_columns * ', '}"
+      end
+
       private
 
       def serial_sequence(table, column)

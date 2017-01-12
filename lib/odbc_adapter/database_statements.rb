@@ -58,6 +58,15 @@ module ODBCAdapter
       "#{table}_seq"
     end
 
+    def recreate_database(name, options = {})
+      drop_database(name)
+      create_database(name, options)
+    end
+
+    def current_database
+      dbms.field_for(ODBC::SQL_DATABASE_NAME).strip
+    end
+
     protected
 
     # Returns an array of record hashes with the column names as keys and

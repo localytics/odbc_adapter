@@ -3,6 +3,7 @@ require 'arel/visitors/bind_visitor'
 require 'odbc'
 require 'yaml'
 
+require 'odbc_adapter/database_limits'
 require 'odbc_adapter/database_statements'
 require 'odbc_adapter/quoting'
 require 'odbc_adapter/schema_statements'
