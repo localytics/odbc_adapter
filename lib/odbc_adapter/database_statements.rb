@@ -149,6 +149,17 @@ module ODBCAdapter
       nil
     end
 
+    ERR_DUPLICATE_KEY_VALUE = 23505
+
+    def translate_exception(exception, message)
+      case exception.message[/^\d+/].to_i
+      when ERR_DUPLICATE_KEY_VALUE
+        ActiveRecord::RecordNotUnique.new(message, exception)
+      else
+        super
+      end
+    end
+
     protected
 
     # Returns an array of record hashes with the column names as keys and
