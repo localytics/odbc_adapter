@@ -144,9 +144,12 @@ module ODBCAdapter
       end
     end
 
-    # TODO: implement primary_key
+    # Returns just a table's primary key
     def primary_key(table_name)
-      nil
+      stmt   = @connection.primary_keys(native_case(table_name.to_s))
+      result = stmt.fetch_all || []
+      stmt.drop unless stmt.nil?
+      result && result[0][3]
     end
 
     ERR_DUPLICATE_KEY_VALUE = 23505

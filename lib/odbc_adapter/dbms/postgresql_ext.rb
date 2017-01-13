@@ -22,6 +22,12 @@ module ODBCAdapter
         "#{table_name}_#{column || 'id'}_seq"
       end
 
+      # Returns the current ID of a table's sequence.
+      def last_insert_id(sequence_name)
+        r = exec_query("SELECT currval('#{sequence_name}')", 'SQL')
+        Integer(r.rows.first.first)
+      end
+
       # Executes an INSERT query and returns the new record's ID
       def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
         unless pk
