@@ -13,27 +13,19 @@ module ODBCAdapter
       ODBC::SQL_DATABASE_NAME
     ]
 
-    attr_reader :connection, :fields
+    attr_reader :fields
 
     def initialize(connection)
-      @connection = connection
       @fields     = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
     end
 
-    def ext_module
-      @ext_module ||=
-        begin
-          require "odbc_adapter/dbms/#{name.downcase}_ext"
-          DBMS.const_get(:"#{name}Ext")
-        end
+    def adapter_class
+      require "odbc_adapter/adapters/#{name.downcase}_odbc_adapter"
+      Adapters.const_get(:"#{name}ODBCAdapter")
     end
 
     def field_for(field)
       fields[field]
-    end
-
-    def visitor(adapter)
-      ext_module::BindSubstitution.new(adapter)
     end
 
     private

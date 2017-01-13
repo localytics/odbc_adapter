@@ -1,8 +1,8 @@
 module ODBCAdapter
-  class DBMS
-    # Overrides specific to PostgreSQL. Mostly taken from
+  module Adapters
+    # Overrides specific to MySQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::MySQLAdapter
-    module MySQLExt
+    class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
       class BindSubstitution < Arel::Visitors::MySQL
         include Arel::Visitors::BindVisitor
       end

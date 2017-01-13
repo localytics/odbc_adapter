@@ -1,8 +1,8 @@
 module ODBCAdapter
-  class DBMS
+  module Adapters
     # Overrides specific to PostgreSQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
-    module PostgreSQLExt
+    class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
       class BindSubstitution < Arel::Visitors::PostgreSQL
         include Arel::Visitors::BindVisitor
       end

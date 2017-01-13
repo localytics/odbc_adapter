@@ -28,10 +28,8 @@ module ActiveRecord
             raise ArgumentError, "No data source name (:dsn) or connection string (:conn_str) specified."
           end
 
-        ConnectionAdapters::ODBCAdapter.new(connection, logger, options.merge(
-          convert_numeric_literals: config[:convert_numeric_literals] || false,
-          emulate_booleans: config[:emulate_booleans] || false
-        ))
+        dbms = ::ODBCAdapter::DBMS.new(connection)
+        dbms.adapter_class.new(connection, logger, dbms)
       end
 
       private
@@ -76,17 +74,13 @@ module ActiveRecord
 
       ADAPTER_NAME = 'ODBC'.freeze
 
-      attr_reader :dbms, :options
+      attr_reader :dbms
 
-      def initialize(connection, logger, options)
+      def initialize(connection, logger, dbms)
         super(connection, logger)
-
         @connection = connection
-        @options    = options
-
-        @dbms    = ::ODBCAdapter::DBMS.new(connection)
-        @visitor = dbms.visitor(self)
-        self.extend(dbms.ext_module)
+        @dbms       = dbms
+        @visitor    = self.class::BindSubstitution.new(self)
       end
 
       # Returns the human-readable name of the adapter. Use mixed case - one
