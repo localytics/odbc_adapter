@@ -10,6 +10,7 @@ ActiveRecord::Schema.define do
     t.string :first_name
     t.string :last_name
     t.integer :letters
+    t.timestamps
   end
 end
 
@@ -24,14 +25,4 @@ Fixtures = [
 
 class User < ActiveRecord::Base
   create(Fixtures)
-end
-
-class ODBCTest < Minitest::Test
-  def setup
-    User.create(Fixtures)
-  end
-
-  def teardown
-    User.delete_all
-  end
 end

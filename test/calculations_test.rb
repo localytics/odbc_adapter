@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class CalculationsTest < ODBCTest
+class CalculationsTest < Minitest::Test
   def test_count
     assert_equal 6, User.count
   end

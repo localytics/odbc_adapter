@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class SelectionTest < ODBCTest
+class SelectionTest < Minitest::Test
   def test_first
     assert_equal 'Kevin', User.first.first_name
   end
