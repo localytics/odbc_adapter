@@ -19,4 +19,8 @@ class SelectionTest < Minitest::Test
     user = User.last
     assert_equal user, User.find(user.id)
   end
+
+  def test_arel_conditions
+    assert_equal 2, User.lots_of_letters.count
+  end
 end
