@@ -93,6 +93,11 @@ module ODBCAdapter
       end
     end
 
+    # The class of the column to instantiate
+    def column_class
+      ::ODBCAdapter::Column
+    end
+
     # Returns an array of Column objects for the table specified by +table_name+.
     def columns(table_name, name = nil)
       stmt   = @connection.columns(native_case(table_name.to_s))
@@ -110,7 +115,7 @@ module ODBCAdapter
         # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
         col_nullable = nullability(col_name, col[17], col[10])
 
-        cols << ::ODBCAdapter::Column.new(format_case(col_name), col_default, col_sql_type, col_native_type, col_nullable, col_scale, native_database_types, col_limit)
+        cols << column_class.new(format_case(col_name), col_default, col_sql_type, col_native_type, col_nullable, col_scale, native_database_types, col_limit)
       end
     end
 
