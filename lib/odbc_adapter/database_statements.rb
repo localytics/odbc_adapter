@@ -41,7 +41,8 @@ module ODBCAdapter
           end
         end
 
-        result = ActiveRecord::Result.new(columns.keys, values)
+        column_names = columns.keys.map { |key| format_case(key) }
+        result = ActiveRecord::Result.new(column_names, values)
       end
     end
 
