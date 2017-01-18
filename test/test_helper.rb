@@ -3,7 +3,12 @@ require 'odbc_adapter'
 
 require 'minitest/autorun'
 
-ActiveRecord::Base.establish_connection(adapter: 'odbc', dsn: 'ODBCTestPostgres')
+options = { adapter: 'odbc' }
+options[:conn_str] = ENV['CONN_STR'] if ENV['CONN_STR']
+options[:dsn]      = ENV['DSN'] if ENV['DSN']
+options[:dsn]      = 'ODBCAdapterPostgreSQLTest' if options.values_at(:conn_str, :dsn).compact.empty?
+
+ActiveRecord::Base.establish_connection(options)
 
 ActiveRecord::Schema.define do
   create_table :users, force: true do |t|
