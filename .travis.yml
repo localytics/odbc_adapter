@@ -1,6 +1,8 @@
 sudo: required
 language: ruby
 cache: bundler
+gemfile:
+- gemfiles/rails3_2.gemfile
 matrix:
   include:
   - rvm: 2.3.1
