@@ -2,6 +2,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'odbc_adapter'
 
 require 'minitest/autorun'
+require 'pry'
 
 options = { adapter: 'odbc' }
 options[:conn_str] = ENV['CONN_STR'] if ENV['CONN_STR']
