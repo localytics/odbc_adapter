@@ -41,6 +41,7 @@ module ODBCAdapter
           end
         end
 
+        values = dbms_type_cast(columns.values, values)
         column_names = columns.keys.map { |key| format_case(key) }
         result = ActiveRecord::Result.new(column_names, values)
       end
@@ -192,6 +193,10 @@ module ODBCAdapter
     end
 
     private
+
+    def dbms_type_cast(columns, values)
+      values
+    end
 
     def extract_table_ref_from_insert_sql(sql)
       sql[/into\s+([^\(]*).*values\s*\(/i]
