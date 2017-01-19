@@ -21,7 +21,13 @@ module ODBCAdapter
 
     def adapter_class
       return adapter unless adapter.is_a?(Symbol)
-      require "odbc_adapter/adapters/#{adapter.downcase}_odbc_adapter"
+
+      ar_version = ActiveRecord::VERSION::MAJOR
+      unless [3].include?(ar_version)
+        raise ArgumentError, "ODBCAdapter: Unsupported ActiveRecord version (#{ar_version})"
+      end
+
+      require "odbc_adapter/adapters/#{adapter.downcase}_odbc_adapter_#{ar_version}"
       Adapters.const_get(:"#{adapter}ODBCAdapter")
     end
 
