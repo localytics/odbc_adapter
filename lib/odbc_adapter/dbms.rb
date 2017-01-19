@@ -20,8 +20,9 @@ module ODBCAdapter
     end
 
     def adapter_class
-      require "odbc_adapter/adapters/#{name.downcase}_odbc_adapter"
-      Adapters.const_get(:"#{name}ODBCAdapter")
+      return adapter unless adapter.is_a?(Symbol)
+      require "odbc_adapter/adapters/#{adapter.downcase}_odbc_adapter"
+      Adapters.const_get(:"#{adapter}ODBCAdapter")
     end
 
     def field_for(field)
@@ -32,16 +33,17 @@ module ODBCAdapter
 
     # Maps a DBMS name to a symbol
     # Different ODBC drivers might return different names for the same DBMS
-    def name
-      @name ||=
+    def adapter
+      @adapter ||=
         begin
           reported = field_for(ODBC::SQL_DBMS_NAME).downcase.gsub(/\s/, '')
-          case reported
-          when /my.*sql/i               then :MySQL
-          when /postgres/i, 'snowflake' then :PostgreSQL
-          else
-            raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported})"
-          end
+          found =
+            ODBCAdapter.dbms_registry.detect do |pattern, adapter|
+              adapter if reported =~ pattern
+            end
+
+          raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported})" if found.nil?
+          found.last
         end
     end
   end
