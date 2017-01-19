@@ -16,13 +16,13 @@ ActiveRecord::Schema.define do
     t.string :first_name
     t.string :last_name
     t.integer :letters
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :todos, force: true do |t|
     t.integer :user_id
     t.text :body
-    t.timestamps
+    t.timestamps null: false
   end
 end
 

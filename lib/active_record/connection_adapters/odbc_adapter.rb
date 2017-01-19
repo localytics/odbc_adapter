@@ -115,7 +115,9 @@ module ActiveRecord
           else
             ODBC::Database.new.drvconnect(options[:driver])
           end
+        super
       end
+      alias :reset! :reconnect!
 
       # Disconnects from the database if already connected. Otherwise, this
       # method does nothing.
