@@ -21,7 +21,6 @@ module ODBCAdapter
       @adapter = adapter
     end
 
-    # TODO: implement boolean column surrogates
     def native_database_types
       grouped = reported_types.group_by { |row| row[1] }
 
