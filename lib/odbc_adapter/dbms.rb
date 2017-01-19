@@ -16,7 +16,7 @@ module ODBCAdapter
     attr_reader :fields
 
     def initialize(connection)
-      @fields     = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
+      @fields = Hash[FIELDS.map { |field| [field, connection.get_info(field)] }]
     end
 
     def adapter_class
