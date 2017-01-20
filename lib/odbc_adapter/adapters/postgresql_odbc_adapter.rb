@@ -7,61 +7,16 @@ module ODBCAdapter
         include Arel::Visitors::BindVisitor
       end
 
-      class PostgreSQLColumn < Column
-        def initialize(name, default, sql_type, native_type, null = true, scale = nil, native_types = nil, limit = nil)
-          super
-          @default = extract_default
-        end
-
-        private
-
-        def extract_default
-          case @default
-          when NilClass
-            nil
-          # Numeric types
-          when /\A\(?(-?\d+(\.\d*)?\)?(::bigint)?)\z/ then $1
-          # Character types
-          when /\A\(?'(.*)'::.*\b(?:character varying|bpchar|text)\z/m then $1
-          # Binary data types
-          when /\A'(.*)'::bytea\z/m then $1
-          # Date/time types
-          when /\A'(.+)'::(?:time(?:stamp)? with(?:out)? time zone|date)\z/ then $1
-          when /\A'(.*)'::interval\z/ then $1
-          # Boolean type
-          when 'true' then true
-          when 'false' then false
-          # Geometric types
-          when /\A'(.*)'::(?:point|line|lseg|box|"?path"?|polygon|circle)\z/ then $1
-          # Network address types
-          when /\A'(.*)'::(?:cidr|inet|macaddr)\z/ then $1
-          # Bit string types
-          when /\AB'(.*)'::"?bit(?: varying)?"?\z/ then $1
-          # XML type
-          when /\A'(.*)'::xml\z/m then $1
-          # Arrays
-          when /\A'(.*)'::"?\D+"?\[\]\z/ then $1
-          # Object identifier types
-          when /\A-?\d+\z/ then $1
-          else
-            # Anything else is blank, some user type, or some function
-            # and we can't know the value of that, so return nil.
-            nil
-          end
-        end
-      end
-
       PRIMARY_KEY = 'SERIAL PRIMARY KEY'
-
-      # Override the default column class
-      def column_class
-        PostgreSQLColumn
-      end
 
       # Filter for ODBCAdapter#tables
       # Omits table from #tables if table_filter returns true
       def table_filter(schema_name, table_type)
         %w[information_schema pg_catalog].include?(schema_name) || table_type !~ /TABLE/i
+      end
+
+      def truncate(table_name, name = nil)
+        exec_query("TRUNCATE TABLE #{quote_table_name(table_name)}", name)
       end
 
       # Returns the sequence name for a table's primary key or some other specified key.

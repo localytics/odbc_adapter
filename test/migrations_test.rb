@@ -7,7 +7,7 @@ class MigrationsTest < Minitest::Test
 
   def test_table_crud
     @connection.create_table(:foos, force: true) do |t|
-      t.timestamps
+      t.timestamps null: false
     end
     assert_equal 3, @connection.columns(:foos).count
 

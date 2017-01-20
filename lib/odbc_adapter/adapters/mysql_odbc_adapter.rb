@@ -9,6 +9,10 @@ module ODBCAdapter
 
       PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'
 
+      def truncate(table_name, name = nil)
+        execute("TRUNCATE TABLE #{quote_table_name(table_name)}", name)
+      end
+
       def limited_update_conditions(where_sql, _quoted_table_name, _quoted_primary_key)
         where_sql
       end

@@ -18,7 +18,8 @@ module ODBCAdapter
 
     # Executes the SQL statement in the context of this connection.
     # Returns the number of rows affected.
-    def execute(sql, name = nil)
+    # TODO: Currently ignoring binds until we can get prepared statements working.
+    def execute(sql, name = nil, binds = [])
       log(sql, name) do
         @connection.do(sql)
       end
@@ -47,6 +48,14 @@ module ODBCAdapter
       end
     end
 
+    # Executes delete +sql+ statement in the context of this connection using
+    # +binds+ as the bind substitutes. +name+ is logged along with
+    # the executed +sql+ statement.
+    def exec_delete(sql, name, binds)
+      execute(sql, name, binds)
+    end
+    alias :exec_update :exec_delete
+
     # Begins the transaction (and turns off auto-committing).
     def begin_db_transaction
       @connection.autocommit = false
@@ -60,7 +69,7 @@ module ODBCAdapter
 
     # Rolls back the transaction (and turns on auto-committing). Must be
     # done if the transaction block raises an exception or returns false.
-    def rollback_db_transaction
+    def exec_rollback_db_transaction
       @connection.rollback
       @connection.autocommit = true
     end
@@ -72,111 +81,7 @@ module ODBCAdapter
       "#{table}_seq"
     end
 
-    def recreate_database(name, options = {})
-      drop_database(name)
-      create_database(name, options)
-    end
-
-    def current_database
-      dbms.field_for(ODBC::SQL_DATABASE_NAME).strip
-    end
-
-    # Returns an array of table names, for database tables visible on the
-    # current connection.
-    def tables(_name = nil)
-      stmt   = @connection.tables
-      result = stmt.fetch_all || []
-      stmt.drop
-
-      result.each_with_object([]) do |row, table_names|
-        schema_name, table_name, table_type = row[1..3]
-        next if respond_to?(:table_filtered?) && table_filtered?(schema_name, table_type)
-        table_names << format_case(table_name)
-      end
-    end
-
-    # The class of the column to instantiate
-    def column_class
-      ::ODBCAdapter::Column
-    end
-
-    # Returns an array of Column objects for the table specified by +table_name+.
-    def columns(table_name, name = nil)
-      stmt   = @connection.columns(native_case(table_name.to_s))
-      result = stmt.fetch_all || []
-      stmt.drop
-
-      result.each_with_object([]) do |col, cols|
-        col_name        = col[3]  # SQLColumns: COLUMN_NAME
-        col_default     = col[12] # SQLColumns: COLUMN_DEF
-        col_sql_type    = col[4]  # SQLColumns: DATA_TYPE
-        col_native_type = col[5]  # SQLColumns: TYPE_NAME
-        col_limit       = col[6]  # SQLColumns: COLUMN_SIZE
-        col_scale       = col[8]  # SQLColumns: DECIMAL_DIGITS
-
-        # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
-        col_nullable = nullability(col_name, col[17], col[10])
-
-        cols << column_class.new(format_case(col_name), col_default, col_sql_type, col_native_type, col_nullable, col_scale, native_database_types, col_limit)
-      end
-    end
-
-    # Returns an array of indexes for the given table.
-    def indexes(table_name, name = nil)
-      stmt   = @connection.indexes(native_case(table_name.to_s))
-      result = stmt.fetch_all || []
-      stmt.drop unless stmt.nil?
-
-      index_cols = []
-      index_name = nil
-      unique     = nil
-
-      result.each_with_object([]).with_index do |(row, indices), row_idx|
-        # Skip table statistics
-        next if row[6] == 0 # SQLStatistics: TYPE
-
-        if row[7] == 1 # SQLStatistics: ORDINAL_POSITION
-          # Start of column descriptor block for next index
-          index_cols = []
-          unique     = row[3].zero? # SQLStatistics: NON_UNIQUE
-          index_name = String.new(row[5]) # SQLStatistics: INDEX_NAME
-        end
-
-        index_cols << format_case(row[8]) # SQLStatistics: COLUMN_NAME
-        next_row = result[row_idx + 1]
-
-        if (row_idx == result.length - 1) || (next_row[6] == 0 || next_row[7] == 1)
-          indices << IndexDefinition.new(table_name, format_case(index_name), unique, index_cols)
-        end
-      end
-    end
-
-    # Returns just a table's primary key
-    def primary_key(table_name)
-      stmt   = @connection.primary_keys(native_case(table_name.to_s))
-      result = stmt.fetch_all || []
-      stmt.drop unless stmt.nil?
-      result[0] && result[0][3]
-    end
-
-    ERR_DUPLICATE_KEY_VALUE = 23505
-
-    def translate_exception(exception, message)
-      case exception.message[/^\d+/].to_i
-      when ERR_DUPLICATE_KEY_VALUE
-        ActiveRecord::RecordNotUnique.new(message, exception)
-      else
-        super
-      end
-    end
-
     protected
-
-    # Returns an array of record hashes with the column names as keys and
-    # column values as values.
-    def select(sql, name = nil, binds = [])
-      exec_query(sql, name, binds).to_a
-    end
 
     # Returns the last auto-generated ID from the affected table.
     def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
