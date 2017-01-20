@@ -133,7 +133,7 @@ module ActiveRecord
       protected
 
       def initialize_type_map(map)
-        map.register_type ODBC::SQL_BIT,          Type::Integer.new(limit: 1)
+        map.register_type ODBC::SQL_BIT,          Type::Boolean.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
         map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
         map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
