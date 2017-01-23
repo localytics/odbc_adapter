@@ -102,7 +102,7 @@ module ODBCAdapter
 
       def rename_column(table_name, column_name, new_column_name)
         col = columns(table_name).detect { |c| c.name == column_name.to_s }
-        current_type = col.sql_type
+        current_type = col.native_type
         current_type << "(#{col.limit})" if col.limit
         execute("ALTER TABLE #{table_name} CHANGE #{column_name} #{new_column_name} #{current_type}")
       end
@@ -115,7 +115,7 @@ module ODBCAdapter
       def options_include_default?(options)
         # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a table
         if options.include?(:default) && options[:default].nil?
-          if options.include?(:column) && options[:column].sql_type =~ /timestamp/i
+          if options.include?(:column) && options[:column].native_type =~ /timestamp/i
             options.delete(:default)
           end
         end

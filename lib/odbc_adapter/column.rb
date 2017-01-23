@@ -1,11 +1,14 @@
 module ODBCAdapter
   class Column < ActiveRecord::ConnectionAdapters::Column
-    def initialize(name, default, cast_type, sql_type, null, scale, limit)
-      @name      = name
-      @default   = default
-      @cast_type = cast_type
-      @sql_type  = sql_type
-      @null      = null
+    attr_reader :native_type
+
+    def initialize(name, default, cast_type, sql_type, null, native_type, scale, limit)
+      @name        = name
+      @default     = default
+      @cast_type   = cast_type
+      @sql_type    = sql_type
+      @null        = null
+      @native_type = native_type
 
       if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(sql_type)
         set_numeric_params(scale, limit)
