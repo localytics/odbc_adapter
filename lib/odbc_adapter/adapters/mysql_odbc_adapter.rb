@@ -138,7 +138,7 @@ module ODBCAdapter
       end
 
       def last_inserted_id(_result)
-        select_value('SELECT LAST_INSERT_ID()')
+        select_value('SELECT LAST_INSERT_ID()').to_i
       end
     end
   end
