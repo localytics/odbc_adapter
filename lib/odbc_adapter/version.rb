@@ -1,3 +1,3 @@
 module ODBCAdapter
-  VERSION = '3.2.0'
+  VERSION = '4.2.0'
 end
