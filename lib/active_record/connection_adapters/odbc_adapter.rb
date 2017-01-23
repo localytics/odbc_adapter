@@ -126,10 +126,6 @@ module ActiveRecord
         @connection.disconnect if @connection.connected?
       end
 
-      def new_column(name, default, cast_type, sql_type = nil, null = true)
-        ::ODBCAdapter::Column.new(name, default, cast_type, sql_type, null)
-      end
-
       protected
 
       def initialize_type_map(map)
@@ -172,8 +168,8 @@ module ActiveRecord
         end
       end
 
-      def new_column(name, default, cast_type, sql_type = nil, null = true, scale = nil, limit = nil)
-        ::ODBCAdapter::Column.new(name, default, cast_type, sql_type, null, scale, limit)
+      def new_column(name, default, cast_type, sql_type = nil, null = true, native_type = nil, scale = nil, limit = nil)
+        ::ODBCAdapter::Column.new(name, default, cast_type, sql_type, null, native_type, scale, limit)
       end
 
       private
