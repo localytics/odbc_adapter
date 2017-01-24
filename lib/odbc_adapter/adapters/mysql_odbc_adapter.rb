@@ -3,11 +3,11 @@ module ODBCAdapter
     # Overrides specific to MySQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::MySQLAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      class BindSubstitution < Arel::Visitors::MySQL
-        include Arel::Visitors::BindVisitor
-      end
-
       PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'
+
+      def arel_visitor
+        Arel::Visitors::MySQL.new(self)
+      end
 
       def truncate(table_name, name = nil)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)}", name)

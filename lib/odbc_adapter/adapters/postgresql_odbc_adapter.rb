@@ -3,11 +3,11 @@ module ODBCAdapter
     # Overrides specific to PostgreSQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
     class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      class BindSubstitution < Arel::Visitors::PostgreSQL
-        include Arel::Visitors::BindVisitor
-      end
-
       PRIMARY_KEY = 'SERIAL PRIMARY KEY'
+
+      def arel_visitor
+        Arel::Visitors::PostgreSQL.new(self)
+      end
 
       # Filter for ODBCAdapter#tables
       # Omits table from #tables if table_filter returns true
