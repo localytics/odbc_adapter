@@ -82,6 +82,7 @@ module ActiveRecord
         super(connection, logger)
         @connection = connection
         @dbms       = dbms
+        @visitor    = self.class::BindSubstitution.new(self)
       end
 
       # Returns the human-readable name of the adapter. Use mixed case - one
@@ -125,10 +126,6 @@ module ActiveRecord
         @connection.disconnect if @connection.connected?
       end
 
-      def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
-        ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
-      end
-
       protected
 
       def initialize_type_map(map)
@@ -169,6 +166,10 @@ module ActiveRecord
         else
           super
         end
+      end
+
+      def new_column(name, default, cast_type, sql_type = nil, null = true, native_type = nil, scale = nil, limit = nil)
+        ::ODBCAdapter::Column.new(name, default, cast_type, sql_type, null, native_type, scale, limit)
       end
 
       private

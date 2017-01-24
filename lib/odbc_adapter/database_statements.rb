@@ -28,7 +28,7 @@ module ODBCAdapter
     # Executes +sql+ statement in the context of this connection using
     # +binds+ as the bind substitutes. +name+ is logged along with
     # the executed +sql+ statement.
-    def exec_query(sql, name = 'SQL', binds = [], prepare: false)
+    def exec_query(sql, name = 'SQL', binds = [])
       log(sql, name) do
         stmt    = @connection.run(sql)
         columns = stmt.columns
@@ -81,10 +81,31 @@ module ODBCAdapter
       "#{table}_seq"
     end
 
+    protected
+
+    # Returns the last auto-generated ID from the affected table.
+    def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+      begin
+        stmt  = log(sql, name) { @connection.run(sql) }
+        table = extract_table_ref_from_insert_sql(sql)
+
+        seq   = sequence_name || default_sequence_name(table, pk)
+        res   = id_value || last_insert_id(table, seq, stmt)
+      ensure
+        stmt.drop unless stmt.nil?
+      end
+      res
+    end
+
     private
 
     def dbms_type_cast(columns, values)
       values
+    end
+
+    def extract_table_ref_from_insert_sql(sql)
+      sql[/into\s+([^\(]*).*values\s*\(/i]
+      $1.strip if $1
     end
 
     # Assume received identifier is in DBMS's data dictionary case.
