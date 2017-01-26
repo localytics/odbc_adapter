@@ -22,6 +22,7 @@ ActiveRecord::Schema.define do
   create_table :todos, force: true do |t|
     t.integer :user_id
     t.text :body
+    t.boolean :published, null: false, default: false
     t.timestamps null: false
   end
 end
@@ -46,20 +47,20 @@ class Todo < ActiveRecord::Base
 end
 
 User.find(1).todos.create([
-  { body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' },
+  { body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.', published: true },
   { body: 'Praesent ut dolor nec eros euismod hendrerit.' },
   { body: 'Curabitur lacinia metus eget interdum volutpat.' }
 ])
 
 User.find(2).todos.create([
-  { body: 'Nulla sollicitudin venenatis turpis vitae finibus.' },
-  { body: 'Proin consectetur id lacus vel feugiat.' },
+  { body: 'Nulla sollicitudin venenatis turpis vitae finibus.', published: true },
+  { body: 'Proin consectetur id lacus vel feugiat.', published: true },
   { body: 'Pellentesque augue orci, aliquet nec ipsum ultrices, cursus blandit metus.' },
   { body: 'Nulla posuere nisl risus, eget scelerisque leo congue non.' },
   { body: 'Curabitur eget massa mollis, iaculis risus in, tristique metus.' }
 ])
 
 User.find(4).todos.create([
-  { body: 'In hac habitasse platea dictumst.' },
+  { body: 'In hac habitasse platea dictumst.', published: true },
   { body: 'Integer molestie ornare velit, eu interdum felis euismod vitae.' }
 ])

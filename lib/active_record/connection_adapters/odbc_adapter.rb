@@ -74,6 +74,7 @@ module ActiveRecord
       include ::ODBCAdapter::SchemaStatements
 
       ADAPTER_NAME = 'ODBC'.freeze
+      BOOLEAN_TYPE = 'BOOLEAN'.freeze
       ERR_DUPLICATE_KEY_VALUE = 23505
 
       attr_reader :dbms

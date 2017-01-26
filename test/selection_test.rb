@@ -23,4 +23,8 @@ class SelectionTest < Minitest::Test
   def test_arel_conditions
     assert_equal 2, User.lots_of_letters.count
   end
+
+  def test_where_boolean
+    assert_equal 4, Todo.where(published: true).count
+  end
 end

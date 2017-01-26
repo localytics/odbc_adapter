@@ -3,7 +3,13 @@ module ODBCAdapter
     # Overrides specific to PostgreSQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
     class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      PRIMARY_KEY = 'SERIAL PRIMARY KEY'
+      BOOLEAN_TYPE = 'bool'.freeze
+      PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
+
+      # Override to handle booleans appropriately
+      def native_database_types
+        @native_database_types ||= super.merge(boolean: { name: 'bool' })
+      end
 
       def arel_visitor
         Arel::Visitors::PostgreSQL.new(self)
@@ -62,7 +68,7 @@ module ODBCAdapter
 
         case value
         when String
-          return super unless 'bytea' == column.sql_type
+          return super unless 'bytea' == column.native_type
           { value: value, format: 1 }
         else
           super
@@ -73,14 +79,6 @@ module ODBCAdapter
       # characters.
       def quote_string(string)
         string.gsub(/\\/, '\&\&').gsub(/'/, "''")
-      end
-
-      def quoted_true
-        "'t'"
-      end
-
-      def quoted_false
-        "'f'"
       end
 
       def disable_referential_integrity #:nodoc:

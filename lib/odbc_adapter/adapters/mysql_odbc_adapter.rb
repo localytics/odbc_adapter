@@ -3,7 +3,7 @@ module ODBCAdapter
     # Overrides specific to MySQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::MySQLAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'
+      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
 
       def arel_visitor
         Arel::Visitors::MySQL.new(self)
@@ -38,6 +38,22 @@ module ODBCAdapter
       # characters.
       def quote_string(string)
         string.gsub(/\\/, '\&\&').gsub(/'/, "''")
+      end
+
+      def quoted_true
+        '1'
+      end
+
+      def unquoted_true
+        1
+      end
+
+      def quoted_false
+        '0'
+      end
+
+      def unquoted_false
+        0
       end
 
       def disable_referential_integrity(&block) #:nodoc:
