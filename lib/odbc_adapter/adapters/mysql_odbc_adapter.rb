@@ -40,6 +40,22 @@ module ODBCAdapter
         string.gsub(/\\/, '\&\&').gsub(/'/, "''")
       end
 
+      def quoted_true
+        '1'
+      end
+
+      def unquoted_true
+        1
+      end
+
+      def quoted_false
+        '0'
+      end
+
+      def unquoted_false
+        0
+      end
+
       def disable_referential_integrity(&block) #:nodoc:
         old = select_value("SELECT @@FOREIGN_KEY_CHECKS")
 

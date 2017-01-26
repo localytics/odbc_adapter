@@ -25,10 +25,6 @@ module ODBCAdapter
       "#{quote_char.chr}#{name}#{quote_char.chr}"
     end
 
-    def quoted_true
-      '1'
-    end
-
     # Ideally, we'd return an ODBC date or timestamp literal escape
     # sequence, but not all ODBC drivers support them.
     def quoted_date(value)
