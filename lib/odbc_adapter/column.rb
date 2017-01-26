@@ -2,7 +2,7 @@ module ODBCAdapter
   class Column < ActiveRecord::ConnectionAdapters::Column
     attr_reader :native_type
 
-    def initialize(name, default, cast_type, sql_type, null, native_type, scale, limit)
+    def initialize(name, default, cast_type, sql_type = nil, null = nil, native_type = nil, scale = nil, limit = nil)
       @name        = name
       @default     = default
       @cast_type   = cast_type
