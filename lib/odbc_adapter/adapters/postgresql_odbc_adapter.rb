@@ -7,7 +7,13 @@ module ODBCAdapter
         include Arel::Visitors::BindVisitor
       end
 
-      PRIMARY_KEY = 'SERIAL PRIMARY KEY'
+      BOOLEAN_TYPE = 'bool'.freeze
+      PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
+
+      # Override to handle booleans appropriately
+      def native_database_types
+        @native_database_types ||= super.merge(boolean: { name: 'bool' })
+      end
 
       # Filter for ODBCAdapter#tables
       # Omits table from #tables if table_filter returns true

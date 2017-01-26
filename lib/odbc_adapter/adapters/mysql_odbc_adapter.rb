@@ -7,7 +7,7 @@ module ODBCAdapter
         include Arel::Visitors::BindVisitor
       end
 
-      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'
+      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
 
       def truncate(table_name, name = nil)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)}", name)
