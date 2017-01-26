@@ -75,6 +75,8 @@ module ODBCAdapter
         col_nullable = nullability(col_name, col[17], col[10])
 
         args = { sql_type: col_native_type, type: col_sql_type, limit: col_limit }
+        args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
+
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
           args[:scale]     = col_scale || 0
           args[:precision] = col_limit
