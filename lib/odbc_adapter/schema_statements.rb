@@ -74,7 +74,7 @@ module ODBCAdapter
         # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
         col_nullable = nullability(col_name, col[17], col[10])
 
-        args = { sql_type: col_native_type, type: col_sql_type, limit: col_limit }
+        args = { sql_type: col_sql_type, type: col_sql_type, limit: col_limit }
         args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
 
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
@@ -83,7 +83,7 @@ module ODBCAdapter
         end
         sql_type_metadata = ActiveRecord::ConnectionAdapters::SqlTypeMetadata.new(**args)
 
-        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, table_name)
+        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, table_name, col_native_type)
       end
     end
 

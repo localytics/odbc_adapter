@@ -5,24 +5,15 @@ module ODBCAdapter
     SQL_NULLABLE = 1
     SQL_NULLABLE_UNKNOWN = 2
 
-    # Returns an array of arrays containing the field values.
-    # Order is the same as that returned by #columns.
-    def select_rows(sql, name = nil)
-      log(sql, name) do
-        stmt   = @connection.run(sql)
-        result = stmt.fetch_all
-        stmt.drop
-        result
-      end
-    end
-
     # Executes the SQL statement in the context of this connection.
     # Returns the number of rows affected.
     def execute(sql, name = nil, binds = [])
       log(sql, name) do
-        prepared_binds =
-          prepare_binds_for_database(binds).map { |bind| _type_cast(bind) }
-        @connection.do(sql, *prepared_binds)
+        if prepared_statements
+          @connection.do(sql, *prepared_binds(binds))
+        else
+          @connection.do(sql)
+        end
       end
     end
 
@@ -31,10 +22,13 @@ module ODBCAdapter
     # the executed +sql+ statement.
     def exec_query(sql, name = 'SQL', binds = [], prepare: false)
       log(sql, name) do
-        prepared_binds =
-          prepare_binds_for_database(binds).map { |bind| _type_cast(bind) }
+        stmt =
+          if prepared_statements
+            @connection.run(sql, *prepared_binds(binds))
+          else
+            @connection.run(sql)
+          end
 
-        stmt    = @connection.run(sql, *prepared_binds)
         columns = stmt.columns
         values  = stmt.to_a
         stmt.drop
@@ -137,6 +131,10 @@ module ODBCAdapter
       # MySQL native ODBC driver doesn't report nullability accurately.
       # So force nullability of 'id' columns
       col_name == 'id' ? false : result
+    end
+
+    def prepared_binds(binds)
+      prepare_binds_for_database(binds).map { |bind| _type_cast(bind) }
     end
   end
 end

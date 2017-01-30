@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class MetadataTest < Minitest::Test
-  def test_tables
-    assert_equal %w[ar_internal_metadata todos users], User.connection.tables.sort
+  def test_data_sources
+    assert_equal %w[ar_internal_metadata todos users], User.connection.data_sources.sort
   end
 
   def test_column_names
