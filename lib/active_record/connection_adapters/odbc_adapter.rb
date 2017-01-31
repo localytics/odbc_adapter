@@ -83,7 +83,6 @@ module ActiveRecord
         super(connection, logger)
         @connection = connection
         @dbms       = dbms
-        @visitor    = self.class::BindSubstitution.new(self)
       end
 
       # Returns the human-readable name of the adapter. Use mixed case - one
@@ -127,10 +126,14 @@ module ActiveRecord
         @connection.disconnect if @connection.connected?
       end
 
+      def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
+        ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
+      end
+
       protected
 
       def initialize_type_map(map)
-        map.register_type ODBC::SQL_BIT,          Type::Boolean.new
+        map.register_type 'boolean',              Type::Boolean.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
         map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
         map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
@@ -149,6 +152,7 @@ module ActiveRecord
         map.register_type ODBC::SQL_TIMESTAMP,    Type::DateTime.new
         map.register_type ODBC::SQL_GUID,         Type::String.new
 
+        alias_type map, ODBC::SQL_BIT,            'boolean'
         alias_type map, ODBC::SQL_VARCHAR,        ODBC::SQL_CHAR
         alias_type map, ODBC::SQL_WCHAR,          ODBC::SQL_CHAR
         alias_type map, ODBC::SQL_WVARCHAR,       ODBC::SQL_CHAR
@@ -167,10 +171,6 @@ module ActiveRecord
         else
           super
         end
-      end
-
-      def new_column(name, default, cast_type, sql_type = nil, null = true, native_type = nil, scale = nil, limit = nil)
-        ::ODBCAdapter::Column.new(name, default, cast_type, sql_type, null, native_type, scale, limit)
       end
 
       private

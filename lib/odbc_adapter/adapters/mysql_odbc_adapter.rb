@@ -3,11 +3,25 @@ module ODBCAdapter
     # Overrides specific to MySQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::MySQLAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
+      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
+
       class BindSubstitution < Arel::Visitors::MySQL
         include Arel::Visitors::BindVisitor
       end
 
-      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
+      def arel_visitor
+        BindSubstitution.new(self)
+      end
+
+      # Explicitly turning off prepared statements in the MySQL adapter because
+      # of a weird bug with SQLDescribeParam returning a string type for LIMIT
+      # parameters. This is blocking them from running with an error:
+      # 
+      #     You have an error in your SQL syntax; ...
+      #     ... right syntax to use near ''1'' at line 1: ...
+      def prepared_statements
+        false
+      end
 
       def truncate(table_name, name = nil)
         execute("TRUNCATE TABLE #{quote_table_name(table_name)}", name)

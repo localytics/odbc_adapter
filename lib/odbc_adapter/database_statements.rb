@@ -5,32 +5,30 @@ module ODBCAdapter
     SQL_NULLABLE = 1
     SQL_NULLABLE_UNKNOWN = 2
 
-    # Returns an array of arrays containing the field values.
-    # Order is the same as that returned by #columns.
-    def select_rows(sql, name = nil)
-      log(sql, name) do
-        stmt   = @connection.run(sql)
-        result = stmt.fetch_all
-        stmt.drop
-        result
-      end
-    end
-
     # Executes the SQL statement in the context of this connection.
     # Returns the number of rows affected.
-    # TODO: Currently ignoring binds until we can get prepared statements working.
     def execute(sql, name = nil, binds = [])
       log(sql, name) do
-        @connection.do(sql)
+        if prepared_statements
+          @connection.do(sql, *prepared_binds(binds))
+        else
+          @connection.do(sql)
+        end
       end
     end
 
     # Executes +sql+ statement in the context of this connection using
     # +binds+ as the bind substitutes. +name+ is logged along with
     # the executed +sql+ statement.
-    def exec_query(sql, name = 'SQL', binds = [])
+    def exec_query(sql, name = 'SQL', binds = [], prepare: false)
       log(sql, name) do
-        stmt    = @connection.run(sql)
+        stmt =
+          if prepared_statements
+            @connection.run(sql, *prepared_binds(binds))
+          else
+            @connection.run(sql)
+          end
+
         columns = stmt.columns
         values  = stmt.to_a
         stmt.drop
@@ -81,31 +79,10 @@ module ODBCAdapter
       "#{table}_seq"
     end
 
-    protected
-
-    # Returns the last auto-generated ID from the affected table.
-    def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
-      begin
-        stmt  = log(sql, name) { @connection.run(sql) }
-        table = extract_table_ref_from_insert_sql(sql)
-
-        seq   = sequence_name || default_sequence_name(table, pk)
-        res   = id_value || last_insert_id(table, seq, stmt)
-      ensure
-        stmt.drop unless stmt.nil?
-      end
-      res
-    end
-
     private
 
     def dbms_type_cast(columns, values)
       values
-    end
-
-    def extract_table_ref_from_insert_sql(sql)
-      sql[/into\s+([^\(]*).*values\s*\(/i]
-      $1.strip if $1
     end
 
     # Assume received identifier is in DBMS's data dictionary case.
@@ -154,6 +131,10 @@ module ODBCAdapter
       # MySQL native ODBC driver doesn't report nullability accurately.
       # So force nullability of 'id' columns
       col_name == 'id' ? false : result
+    end
+
+    def prepared_binds(binds)
+      prepare_binds_for_database(binds).map { |bind| _type_cast(bind) }
     end
   end
 end
