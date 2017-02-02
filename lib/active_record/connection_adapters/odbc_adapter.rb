@@ -11,6 +11,7 @@ require 'odbc_adapter/schema_statements'
 require 'odbc_adapter/column'
 require 'odbc_adapter/column_metadata'
 require 'odbc_adapter/dbms'
+require 'odbc_adapter/registry'
 require 'odbc_adapter/type_caster'
 require 'odbc_adapter/version'
 
