@@ -6,6 +6,8 @@ An ActiveRecord ODBC adapter. Master branch is working off of edge Rails. Previo
 
 This adapter currently works for connecting using ODBC to MySQL 5 and PostgreSQL 9 databases. You can also register your own adapter using the `ODBCAdapter.register` function to connect to a database of your choice.
 
+A lot of this work is based on [OpenLink's ActiveRecord adapter](http://odbc-rails.rubyforge.org/) which works for earlier versions of Rails.
+
 ## Installation
 
 Ensure you have the ODBC driver installed on your machine. You will also need the driver for whichever database to which you want ODBC to connect.
