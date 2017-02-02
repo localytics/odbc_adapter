@@ -10,7 +10,7 @@ module ODBCAdapter
       }
     end
 
-    def register(pattern, superclass, &block)
+    def register(pattern, superclass = Object, &block)
       dbms_registry[pattern] = Class.new(superclass, &block)
     end
   end
