@@ -124,10 +124,19 @@ module ODBCAdapter
         execute(change_column_sql)
       end
 
-      def change_column_default(table_name, column_name, default)
-        col = columns(table_name).detect { |c| c.name == column_name.to_s }
-        change_column(table_name, column_name, col.type,
-          default: default, limit: col.limit, precision: col.precision, scale: col.scale)
+      def change_column_default(table_name, column_name, default_or_changes)
+        default = extract_new_default_value(default_or_changes)
+        column = column_for(table_name, column_name)
+        change_column(table_name, column_name, column.sql_type, default: default)
+      end
+
+      def change_column_null(table_name, column_name, null, default = nil)
+        column = column_for(table_name, column_name)
+
+        unless null || default.nil?
+          execute("UPDATE #{quote_table_name(table_name)} SET #{quote_column_name(column_name)}=#{quote(default)} WHERE #{quote_column_name(column_name)} IS NULL")
+        end
+        change_column(table_name, column_name, column.sql_type, null: null)
       end
 
       def rename_column(table_name, column_name, new_column_name)
@@ -137,13 +146,14 @@ module ODBCAdapter
         execute("ALTER TABLE #{table_name} CHANGE #{column_name} #{new_column_name} #{current_type}")
       end
 
+      # Skip primary key indexes
       def indexes(table_name, name = nil)
-        # Skip primary key indexes
         super(table_name, name).delete_if { |i| i.unique && i.name =~ /^PRIMARY$/ }
       end
 
+      # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a
+      # table
       def options_include_default?(options)
-        # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a table
         if options.include?(:default) && options[:default].nil?
           if options.include?(:column) && options[:column].native_type =~ /timestamp/i
             options.delete(:default)
