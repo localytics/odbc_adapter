@@ -6,6 +6,8 @@ module ODBCAdapter
       BOOLEAN_TYPE = 'bool'.freeze
       PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
 
+      alias :create :insert
+
       # Override to handle booleans appropriately
       def native_database_types
         @native_database_types ||= super.merge(boolean: { name: 'bool' })
@@ -25,33 +27,13 @@ module ODBCAdapter
         exec_query("TRUNCATE TABLE #{quote_table_name(table_name)}", name)
       end
 
-      # Returns the sequence name for a table's primary key or some other specified key.
+      # Returns the sequence name for a table's primary key or some other
+      # specified key.
       def default_sequence_name(table_name, pk = nil) #:nodoc:
         serial_sequence(table_name, pk || 'id').split('.').last
       rescue ActiveRecord::StatementInvalid
         "#{table_name}_#{pk || 'id'}_seq"
       end
-
-      # Returns the current ID of a table's sequence.
-      def last_insert_id(sequence_name)
-        r = exec_query("SELECT currval('#{sequence_name}')", 'SQL')
-        Integer(r.rows.first.first)
-      end
-
-      # Executes an INSERT query and returns the new record's ID
-      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
-        unless pk
-          table_ref = extract_table_ref_from_insert_sql(sql)
-          pk = primary_key(table_ref) if table_ref
-        end
-
-        if pk
-          select_value("#{sql} RETURNING #{quote_column_name(pk)}")
-        else
-          super
-        end
-      end
-      alias :create :insert
 
       def sql_for_insert(sql, pk, id_value, sequence_name, binds)
         unless pk
@@ -88,13 +70,14 @@ module ODBCAdapter
         execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
       end
 
-      # Create a new PostgreSQL database. Options include <tt>:owner</tt>, <tt>:template</tt>,
-      # <tt>:encoding</tt>, <tt>:tablespace</tt>, and <tt>:connection_limit</tt> (note that MySQL
-      # uses <tt>:charset</tt> while PostgreSQL uses <tt>:encoding</tt>).
+      # Create a new PostgreSQL database. Options include <tt>:owner</tt>,
+      # <tt>:template</tt>, <tt>:encoding</tt>, <tt>:tablespace</tt>, and
+      # <tt>:connection_limit</tt> (note that MySQL uses <tt>:charset</tt>
+      # while PostgreSQL uses <tt>:encoding</tt>).
       #
       # Example:
       #   create_database config[:database], config
-      #   create_database 'foo_development', :encoding => 'unicode'
+      #   create_database 'foo_development', encoding: 'unicode'
       def create_database(name, options = {})
         options = options.reverse_merge(encoding: 'utf8')
 
@@ -121,7 +104,7 @@ module ODBCAdapter
       # Drops a PostgreSQL database.
       #
       # Example:
-      #   drop_database 'matt_development'
+      #   drop_database 'rails_development'
       def drop_database(name) #:nodoc:
         execute "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
       end
@@ -152,22 +135,46 @@ module ODBCAdapter
         execute("ALTER INDEX #{quote_column_name(old_name)} RENAME TO #{quote_table_name(new_name)}")
       end
 
-      # Returns a SELECT DISTINCT clause for a given set of columns and a given ORDER BY clause.
+      # Returns a SELECT DISTINCT clause for a given set of columns and a given
+      # ORDER BY clause.
       #
-      # PostgreSQL requires the ORDER BY columns in the select list for distinct queries, and
-      # requires that the ORDER BY include the distinct column.
+      # PostgreSQL requires the ORDER BY columns in the select list for
+      # distinct queries, and requires that the ORDER BY include the distinct
+      # column.
       #
       #   distinct("posts.id", "posts.created_at desc")
       def distinct(columns, orders)
         return "DISTINCT #{columns}" if orders.empty?
 
-        # Construct a clean list of column names from the ORDER BY clause, removing
-        # any ASC/DESC modifiers
+        # Construct a clean list of column names from the ORDER BY clause,
+        # removing any ASC/DESC modifiers
         order_columns = orders.map { |s| s.gsub(/\s+(ASC|DESC)\s*(NULLS\s+(FIRST|LAST)\s*)?/i, '') }
         order_columns.reject! { |c| c.blank? }
         order_columns = order_columns.zip((0...order_columns.size).to_a).map { |s,i| "#{s} AS alias_#{i}" }
 
         "DISTINCT #{columns}, #{order_columns * ', '}"
+      end
+
+      protected
+
+      # Executes an INSERT query and returns the new record's ID
+      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+        unless pk
+          table_ref = extract_table_ref_from_insert_sql(sql)
+          pk = primary_key(table_ref) if table_ref
+        end
+
+        if pk
+          select_value("#{sql} RETURNING #{quote_column_name(pk)}")
+        else
+          super
+        end
+      end
+
+      # Returns the current ID of a table's sequence.
+      def last_insert_id(sequence_name)
+        r = exec_query("SELECT currval('#{sequence_name}')", 'SQL')
+        Integer(r.rows.first.first)
       end
 
       private

@@ -27,26 +27,6 @@ module ODBCAdapter
         execute("TRUNCATE TABLE #{quote_table_name(table_name)}", name)
       end
 
-      def limited_update_conditions(where_sql, _quoted_table_name, _quoted_primary_key)
-        where_sql
-      end
-
-      def join_to_update(update, select) #:nodoc:
-        if select.limit || select.offset || select.orders.any?
-          subsubselect = select.clone
-          subsubselect.projections = [update.key]
-
-          subselect = Arel::SelectManager.new(select.engine)
-          subselect.project Arel.sql(update.key.name)
-          subselect.from subsubselect.as('__active_record_temp')
-
-          update.where update.key.in(subselect)
-        else
-          update.table select.source
-          update.wheres = select.constraints
-        end
-      end
-
       # Quotes a string, escaping any ' (single quote) and \ (backslash)
       # characters.
       def quote_string(string)
@@ -113,9 +93,8 @@ module ODBCAdapter
       end
 
       def change_column(table_name, column_name, type, options = {})
-        # column_name.to_s used in case column_name is a symbol
         unless options_include_default?(options)
-          options[:default] = columns(table_name).find { |c| c.name == column_name.to_s }.default
+          options[:default] = column_for(table_name, column_name).default
         end
 
         change_column_sql = "ALTER TABLE #{table_name} CHANGE #{column_name} #{column_name} #{type_to_sql(type, options[:limit], options[:precision], options[:scale])}"
@@ -139,34 +118,15 @@ module ODBCAdapter
       end
 
       def rename_column(table_name, column_name, new_column_name)
-        col = columns(table_name).detect { |c| c.name == column_name.to_s }
-        current_type = col.native_type
-        current_type << "(#{col.limit})" if col.limit
+        column = column_for(table_name, column_name)
+        current_type = column.native_type
+        current_type << "(#{column.limit})" if column.limit
         execute("ALTER TABLE #{table_name} CHANGE #{column_name} #{new_column_name} #{current_type}")
       end
 
       # Skip primary key indexes
       def indexes(table_name, name = nil)
-        super(table_name, name).delete_if { |i| i.unique && i.name =~ /^PRIMARY$/ }
-      end
-
-      # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a
-      # table
-      def options_include_default?(options)
-        if options.include?(:default) && options[:default].nil?
-          if options.include?(:column) && options[:column].native_type =~ /timestamp/i
-            options.delete(:default)
-          end
-        end
-        super(options)
-      end
-
-      def structure_dump
-        select_all("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'").map do |table|
-          table.delete('Table_type')
-          sql = "SHOW CREATE TABLE #{quote_table_name(table.to_a.first.last)}"
-          exec_query(sql).first['Create Table'] + ";\n\n"
-        end.join
+        super(table_name, name).reject { |i| i.unique && i.name =~ /^PRIMARY$/ }
       end
 
       protected
@@ -178,6 +138,19 @@ module ODBCAdapter
 
       def last_inserted_id(_result)
         select_value('SELECT LAST_INSERT_ID()').to_i
+      end
+
+      private
+
+      # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a
+      # table
+      def options_include_default?(options)
+        if options.include?(:default) && options[:default].nil?
+          if options.include?(:column) && options[:column].native_type =~ /timestamp/i
+            options.delete(:default)
+          end
+        end
+        super(options)
       end
     end
   end
