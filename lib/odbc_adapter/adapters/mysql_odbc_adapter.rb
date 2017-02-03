@@ -1,7 +1,7 @@
 module ODBCAdapter
   module Adapters
     # Overrides specific to MySQL. Mostly taken from
-    # ActiveRecord::ConnectionAdapters::MySQLAdapter
+    # ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
       PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
 
@@ -31,7 +31,6 @@ module ODBCAdapter
         where_sql
       end
 
-      # Taken from ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter
       def join_to_update(update, select) #:nodoc:
         if select.limit || select.offset || select.orders.any?
           subsubselect = select.clone
