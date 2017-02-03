@@ -16,8 +16,7 @@ module ODBCAdapter
           adapter if reported_name =~ pattern
         end
 
-      raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported_name})" if found.nil?
-      normalize_adapter(found.last)
+      normalize_adapter(found && found.last || :Null)
     end
 
     def register(pattern, superclass = Object, &block)
