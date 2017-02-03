@@ -29,7 +29,7 @@ module ODBCAdapter
 
       # Returns the sequence name for a table's primary key or some other
       # specified key.
-      def default_sequence_name(table_name, pk = nil) #:nodoc:
+      def default_sequence_name(table_name, pk = nil)
         serial_sequence(table_name, pk || 'id').split('.').last
       rescue ActiveRecord::StatementInvalid
         "#{table_name}_#{pk || 'id'}_seq"
@@ -63,7 +63,7 @@ module ODBCAdapter
         string.gsub(/\\/, '\&\&').gsub(/'/, "''")
       end
 
-      def disable_referential_integrity #:nodoc:
+      def disable_referential_integrity
         execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
         yield
       ensure
@@ -105,7 +105,7 @@ module ODBCAdapter
       #
       # Example:
       #   drop_database 'rails_development'
-      def drop_database(name) #:nodoc:
+      def drop_database(name)
         execute "DROP DATABASE IF EXISTS #{quote_table_name(name)}"
       end
 

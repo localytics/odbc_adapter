@@ -49,7 +49,7 @@ module ODBCAdapter
         0
       end
 
-      def disable_referential_integrity(&block) #:nodoc:
+      def disable_referential_integrity(&block)
         old = select_value("SELECT @@FOREIGN_KEY_CHECKS")
 
         begin
@@ -60,13 +60,14 @@ module ODBCAdapter
         end
       end
 
-      # Create a new MySQL database with optional <tt>:charset</tt> and <tt>:collation</tt>.
-      # Charset defaults to utf8.
+      # Create a new MySQL database with optional <tt>:charset</tt> and
+      # <tt>:collation</tt>. Charset defaults to utf8.
       #
       # Example:
-      #   create_database 'charset_test', :charset => 'latin1', :collation => 'latin1_bin'
-      #   create_database 'matt_development'
-      #   create_database 'matt_development', :charset => :big5
+      #   create_database 'charset_test', charset: 'latin1',
+      #                                   collation: 'latin1_bin'
+      #   create_database 'rails_development'
+      #   create_database 'rails_development', charset: :big5
       def create_database(name, options = {})
         if options[:collation]
           execute("CREATE DATABASE `#{name}` DEFAULT CHARACTER SET `#{options[:charset] || 'utf8'}` COLLATE `#{options[:collation]}`")
@@ -78,8 +79,8 @@ module ODBCAdapter
       # Drops a MySQL database.
       #
       # Example:
-      #   drop_database('sebastian_development')
-      def drop_database(name) #:nodoc:
+      #   drop_database('rails_development')
+      def drop_database(name)
         execute("DROP DATABASE IF EXISTS `#{name}`")
       end
 

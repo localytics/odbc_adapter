@@ -18,7 +18,7 @@ require 'odbc_adapter/version'
 module ActiveRecord
   class Base
     class << self
-      def odbc_connection(config) # :nodoc:
+      def odbc_connection(config)
         config = config.symbolize_keys
 
         connection, options =
