@@ -10,7 +10,7 @@ require 'odbc_adapter/schema_statements'
 
 require 'odbc_adapter/column'
 require 'odbc_adapter/column_metadata'
-require 'odbc_adapter/dbms'
+require 'odbc_adapter/database_metadata'
 require 'odbc_adapter/registry'
 require 'odbc_adapter/type_caster'
 require 'odbc_adapter/version'
@@ -30,8 +30,8 @@ module ActiveRecord
             raise ArgumentError, "No data source name (:dsn) or connection string (:conn_str) specified."
           end
 
-        dbms = ::ODBCAdapter::DBMS.new(connection)
-        dbms.adapter_class.new(connection, logger, dbms)
+        database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
+        database_metadata.adapter_class.new(connection, logger, database_metadata)
       end
 
       private
@@ -78,12 +78,12 @@ module ActiveRecord
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
       ERR_DUPLICATE_KEY_VALUE = 23505
 
-      attr_reader :dbms
+      attr_reader :database_metadata
 
-      def initialize(connection, logger, dbms)
+      def initialize(connection, logger, database_metadata)
         super(connection, logger)
-        @connection = connection
-        @dbms       = dbms
+        @connection        = connection
+        @database_metadata = database_metadata
       end
 
       # Returns the human-readable name of the adapter. Use mixed case - one
