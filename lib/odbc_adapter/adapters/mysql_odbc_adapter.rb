@@ -129,19 +129,6 @@ module ODBCAdapter
         super(table_name, name).reject { |i| i.unique && i.name =~ /^PRIMARY$/ }
       end
 
-      protected
-
-      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
-        super
-        id_value || last_inserted_id(nil)
-      end
-
-      def last_inserted_id(_result)
-        select_value('SELECT LAST_INSERT_ID()').to_i
-      end
-
-      private
-
       # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a
       # table
       def options_include_default?(options)
@@ -151,6 +138,17 @@ module ODBCAdapter
           end
         end
         super(options)
+      end
+
+      protected
+
+      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+        super
+        id_value || last_inserted_id(nil)
+      end
+
+      def last_inserted_id(_result)
+        select_value('SELECT LAST_INSERT_ID()').to_i
       end
     end
   end
