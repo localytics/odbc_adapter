@@ -4,7 +4,7 @@
 
 An ActiveRecord ODBC adapter. Master branch is working off of edge Rails. Previous work has been done to make it compatible with Rails 3.2 and 4.2; for those versions use the 3.2.x or 4.2.x gem releases.
 
-This adapter currently works for connecting using ODBC to MySQL 5 and PostgreSQL 9 databases. You can also register your own adapter using the `ODBCAdapter.register` function to connect to a database of your choice.
+This adapter will work for basic queries for most DBMSs out of the box, without support for migrations. Full support is built-in for MySQL 5 and PostgreSQL 9 databases. You can register your own adapter to get more support for your DBMS using the `ODBCAdapter.register` function.
 
 A lot of this work is based on [OpenLink's ActiveRecord adapter](http://odbc-rails.rubyforge.org/) which works for earlier versions of Rails.
 
