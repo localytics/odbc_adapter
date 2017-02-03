@@ -8,7 +8,7 @@ module ODBCAdapter
     # Returns a quoted form of the column name.
     def quote_column_name(name)
       name = name.to_s
-      quote_char = dbms.field_for(ODBC::SQL_IDENTIFIER_QUOTE_CHAR).to_s.strip
+      quote_char = database_metadata.identifier_quote_char.to_s.strip
 
       return name if quote_char.length.zero?
       quote_char = quote_char[0]
@@ -16,9 +16,8 @@ module ODBCAdapter
       # Avoid quoting any already quoted name
       return name if name[0] == quote_char && name[-1] == quote_char
 
-      # If DBMS's SQL_IDENTIFIER_CASE = SQL_IC_UPPER, only quote mixed
-      # case names.
-      if dbms.field_for(ODBC::SQL_IDENTIFIER_CASE) == ODBC::SQL_IC_UPPER
+      # If upcase identifiers, only quote mixed case names.
+      if database_metadata.upcase_identifiers?
         return name unless (name =~ /([A-Z]+[a-z])|([a-z]+[A-Z])/)
       end
 

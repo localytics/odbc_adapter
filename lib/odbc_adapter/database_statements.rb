@@ -87,8 +87,7 @@ module ODBCAdapter
 
     # Assume received identifier is in DBMS's data dictionary case.
     def format_case(identifier)
-      case dbms.field_for(ODBC::SQL_IDENTIFIER_CASE)
-      when ODBC::SQL_IC_UPPER
+      if database_metadata.upcase_identifiers?
         identifier =~ /[a-z]/ ? identifier : identifier.downcase
       else
         identifier
@@ -114,8 +113,7 @@ module ODBCAdapter
     # Converts an identifier to the case conventions used by the DBMS.
     # Assume received identifier is in ActiveRecord case.
     def native_case(identifier)
-      case dbms.field_for(ODBC::SQL_IDENTIFIER_CASE)
-      when ODBC::SQL_IC_UPPER
+      if database_metadata.upcase_identifiers?
         identifier =~ /[A-Z]/ ? identifier : identifier.upcase
       else
         identifier

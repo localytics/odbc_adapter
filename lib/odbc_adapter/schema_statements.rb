@@ -98,12 +98,12 @@ module ODBCAdapter
     # Ensure it's shorter than the maximum identifier length for the current
     # dbms
     def index_name(table_name, options)
-      maximum = dbms.field_for(ODBC::SQL_MAX_IDENTIFIER_LEN) || 255
+      maximum = database_metadata.max_identifier_len || 255
       super(table_name, options)[0...maximum]
     end
 
     def current_database
-      dbms.field_for(ODBC::SQL_DATABASE_NAME).strip
+      database_metadata.database_name.strip
     end
   end
 end
