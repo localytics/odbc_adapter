@@ -3,7 +3,10 @@
 require 'bundler/setup'
 require 'odbc_adapter'
 
-ActiveRecord::Base.establish_connection(adapter: 'odbc', dsn: ENV['DSN']) if ENV['DSN']
+options = { adapter: 'odbc' }
+options[:dsn]      = ENV['DSN']      if ENV['DSN']
+options[:conn_str] = ENV['CONN_STR'] if ENV['CONN_STR']
+ActiveRecord::Base.establish_connection(options) if options.any?
 
 require 'irb'
 IRB.start

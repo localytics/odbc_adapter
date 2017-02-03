@@ -51,7 +51,7 @@ module ODBCAdapter
         next_row = result[row_idx + 1]
 
         if (row_idx == result.length - 1) || (next_row[6] == 0 || next_row[7] == 1)
-          indices << IndexDefinition.new(table_name, format_case(index_name), unique, index_cols)
+          indices << ActiveRecord::ConnectionAdapters::IndexDefinition.new(table_name, format_case(index_name), unique, index_cols)
         end
       end
     end
@@ -93,6 +93,25 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
       result[0] && result[0][3]
+    end
+
+    def foreign_keys(table_name)
+      stmt   = @connection.foreign_keys(native_case(table_name.to_s))
+      result = stmt.fetch_all || []
+      stmt.drop unless stmt.nil?
+
+      result.map do |key|
+        fk_from_table      = key[2]  # PKTABLE_NAME
+        fk_to_table        = key[6]  # FKTABLE_NAME
+
+        ActiveRecord::ConnectionAdapters::ForeignKeyDefinition.new(fk_from_table, fk_to_table,
+          name:        key[11], # FK_NAME
+          column:      key[3],  # PKCOLUMN_NAME
+          primary_key: key[7],  # FKCOLUMN_NAME
+          on_delete:   key[10], # DELETE_RULE
+          on_update:   key[9]   # UPDATE_RULE
+        )
+      end
     end
 
     # Ensure it's shorter than the maximum identifier length for the current
