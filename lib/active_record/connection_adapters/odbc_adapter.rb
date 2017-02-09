@@ -2,9 +2,9 @@ require 'active_record'
 require 'arel/visitors/bind_visitor'
 require 'odbc'
 
-require 'odbc_adapter'
 require 'odbc_adapter/database_limits'
 require 'odbc_adapter/database_statements'
+require 'odbc_adapter/error'
 require 'odbc_adapter/quoting'
 require 'odbc_adapter/schema_statements'
 
@@ -76,7 +76,9 @@ module ActiveRecord
 
       ADAPTER_NAME = 'ODBC'.freeze
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
+
       ERR_DUPLICATE_KEY_VALUE = 23505
+      ERR_QUERY_TIMED_OUT = /Query has timed out/
 
       attr_reader :database_metadata
 
@@ -166,9 +168,11 @@ module ActiveRecord
       end
 
       def translate_exception(exception, message)
-        case exception.message[/^\d+/].to_i
-        when ERR_DUPLICATE_KEY_VALUE
+        case
+        when exception.message[/^\d+/].to_i == ERR_DUPLICATE_KEY_VALUE
           ActiveRecord::RecordNotUnique.new(message, exception)
+        when exception.message =~ ERR_QUERY_TIMED_OUT
+          ::ODBCAdapter::QueryTimeoutError.new(message, exception)
         else
           super
         end
