@@ -77,8 +77,9 @@ module ActiveRecord
       ADAPTER_NAME = 'ODBC'.freeze
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
 
-      ERR_DUPLICATE_KEY_VALUE = 23505
-      ERR_QUERY_TIMED_OUT = /Query has timed out/
+      ERR_DUPLICATE_KEY_VALUE     = 23505
+      ERR_QUERY_TIMED_OUT         = 57014
+      ERR_QUERY_TIMED_OUT_MESSAGE = /Query has timed out/
 
       attr_reader :database_metadata
 
@@ -168,10 +169,12 @@ module ActiveRecord
       end
 
       def translate_exception(exception, message)
+        error_number = exception.message[/^\d+/].to_i
+
         case
-        when exception.message[/^\d+/].to_i == ERR_DUPLICATE_KEY_VALUE
+        when error_number == ERR_DUPLICATE_KEY_VALUE
           ActiveRecord::RecordNotUnique.new(message, exception)
-        when exception.message =~ ERR_QUERY_TIMED_OUT
+        when error_number == ERR_QUERY_TIMED_OUT, exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
           ::ODBCAdapter::QueryTimeoutError.new(message, exception)
         else
           super
