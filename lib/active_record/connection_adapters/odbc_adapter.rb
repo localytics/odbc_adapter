@@ -12,7 +12,6 @@ require 'odbc_adapter/column'
 require 'odbc_adapter/column_metadata'
 require 'odbc_adapter/database_metadata'
 require 'odbc_adapter/registry'
-require 'odbc_adapter/type_caster'
 require 'odbc_adapter/version'
 
 module ActiveRecord
@@ -30,6 +29,10 @@ module ActiveRecord
           else
             raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
           end
+
+        # Ensure ODBC is mapping time-based fields to native ruby objects in UTC
+        connection.use_time = true
+        connection.use_utc  = true
 
         database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
         database_metadata.adapter_class.new(connection, logger, config, database_metadata)

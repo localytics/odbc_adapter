@@ -33,13 +33,6 @@ module ODBCAdapter
         values  = stmt.to_a
         stmt.drop
 
-        casters = TypeCaster.build_from(columns.values)
-        if casters.any?
-          values.each do |row|
-            casters.each { |caster| row[caster.idx] = caster.cast(row[caster.idx]) }
-          end
-        end
-
         values = dbms_type_cast(columns.values, values)
         column_names = columns.keys.map { |key| format_case(key) }
         ActiveRecord::Result.new(column_names, values)
