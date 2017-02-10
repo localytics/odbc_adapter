@@ -30,10 +30,6 @@ module ActiveRecord
             raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
           end
 
-        # Ensure ODBC is mapping time-based fields to native ruby objects in UTC
-        connection.use_time = true
-        connection.use_utc  = true
-
         database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
         database_metadata.adapter_class.new(connection, logger, config, database_metadata)
       end
@@ -82,6 +78,7 @@ module ActiveRecord
       attr_reader :database_metadata
 
       def initialize(connection, logger, config, database_metadata)
+        configure_time_options(connection)
         super(connection, logger, config)
         @database_metadata = database_metadata
       end
@@ -116,6 +113,7 @@ module ActiveRecord
           else
             ODBC::Database.new.drvconnect(@config[:driver])
           end
+        configure_time_options(@connection)
         super
       end
       alias reset! reconnect!
@@ -191,6 +189,12 @@ module ActiveRecord
         map.register_type(new_type) do |_, *args|
           map.lookup(old_type, *args)
         end
+      end
+
+      # Ensure ODBC is mapping time-based fields to native ruby objects in UTC
+      def configure_time_options(connection)
+        connection.use_time = true
+        connection.use_utc  = true
       end
     end
   end
