@@ -21,7 +21,7 @@ module ActiveRecord
       def odbc_connection(config)
         config = config.symbolize_keys
 
-        connection, options =
+        connection, config =
           if config.key?(:dsn)
             odbc_dsn_connection(config)
           elsif config.key?(:conn_str)
@@ -31,7 +31,7 @@ module ActiveRecord
           end
 
         database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
-        database_metadata.adapter_class.new(connection, logger, database_metadata)
+        database_metadata.adapter_class.new(connection, logger, config, database_metadata)
       end
 
       private
@@ -40,8 +40,7 @@ module ActiveRecord
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
         connection = ODBC.connect(config[:dsn], username, password)
-        options    = { dsn: config[:dsn], username: username, password: password }
-        [connection, options]
+        [connection, config.merge(username: username, password: password)]
       end
 
       # Connect using ODBC connection string
@@ -61,8 +60,7 @@ module ActiveRecord
         end
 
         connection = ODBC::Database.new.drvconnect(driver)
-        options    = { conn_str: config[:conn_str], driver: driver }
-        [connection, options]
+        [connection, config.merge(driver: driver)]
       end
     end
   end
@@ -83,9 +81,8 @@ module ActiveRecord
 
       attr_reader :database_metadata
 
-      def initialize(connection, logger, database_metadata)
-        super(connection, logger)
-        @connection        = connection
+      def initialize(connection, logger, config, database_metadata)
+        super(connection, logger, config)
         @database_metadata = database_metadata
       end
 
@@ -115,10 +112,10 @@ module ActiveRecord
       def reconnect!
         disconnect!
         @connection =
-          if options.key?(:dsn)
-            ODBC.connect(options[:dsn], options[:username], options[:password])
+          if @config.key?(:dsn)
+            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
           else
-            ODBC::Database.new.drvconnect(options[:driver])
+            ODBC::Database.new.drvconnect(@config[:driver])
           end
         super
       end
