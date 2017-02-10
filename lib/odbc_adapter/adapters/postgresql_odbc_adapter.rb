@@ -19,7 +19,7 @@ module ODBCAdapter
 
       # Filter for ODBCAdapter#tables
       # Omits table from #tables if table_filter returns true
-      def table_filter(schema_name, table_type)
+      def table_filtered?(schema_name, table_type)
         %w[information_schema pg_catalog].include?(schema_name) || table_type !~ /TABLE/i
       end
 
