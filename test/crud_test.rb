@@ -3,7 +3,7 @@ require 'test_helper'
 class CRUDTest < Minitest::Test
   def test_creation
     with_transaction do
-      user = User.create(first_name: 'foo', last_name: 'bar')
+      User.create(first_name: 'foo', last_name: 'bar')
       assert_equal 7, User.count
     end
   end

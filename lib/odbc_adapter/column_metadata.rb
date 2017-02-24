@@ -13,7 +13,7 @@ module ODBCAdapter
       date:        [ODBC::SQL_TYPE_DATE, ODBC::SQL_DATE, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
       binary:      [ODBC::SQL_LONGVARBINARY, ODBC::SQL_VARBINARY],
       boolean:     [ODBC::SQL_BIT, ODBC::SQL_TINYINT, ODBC::SQL_SMALLINT, ODBC::SQL_INTEGER]
-    }
+    }.freeze
 
     attr_reader :adapter
 
@@ -56,7 +56,7 @@ module ODBCAdapter
       create_params = selected_row[5]
       # Depending on the column type, the CREATE_PARAMS keywords can
       # include length, precision or scale.
-      if create_params && create_params.strip.length > 0 && abstract != :decimal
+      if create_params && !create_params.strip.empty? && abstract != :decimal
         result[:limit] = selected_row[2] # SQLGetTypeInfo: COL_SIZE
       end
 

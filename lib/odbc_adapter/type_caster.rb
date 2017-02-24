@@ -7,7 +7,7 @@ module ODBCAdapter
       ODBC::SQL_DATE,
       ODBC::SQL_TIME,
       ODBC::SQL_TIMESTAMP
-    ]
+    ].freeze
 
     attr_reader :idx
 

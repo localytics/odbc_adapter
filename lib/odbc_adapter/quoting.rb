@@ -18,7 +18,7 @@ module ODBCAdapter
 
       # If upcase identifiers, only quote mixed case names.
       if database_metadata.upcase_identifiers?
-        return name unless (name =~ /([A-Z]+[a-z])|([a-z]+[A-Z])/)
+        return name unless name =~ /([A-Z]+[a-z])|([a-z]+[A-Z])/
       end
 
       "#{quote_char.chr}#{name}#{quote_char.chr}"
@@ -33,9 +33,9 @@ module ODBCAdapter
         if value.respond_to?(zone_conversion_method)
           value = value.send(zone_conversion_method)
         end
-        value.strftime("%Y-%m-%d %H:%M:%S") # Time, DateTime
+        value.strftime('%Y-%m-%d %H:%M:%S') # Time, DateTime
       else
-        value.strftime("%Y-%m-%d") # Date
+        value.strftime('%Y-%m-%d') # Date
       end
     end
   end

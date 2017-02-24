@@ -27,7 +27,7 @@ module ODBCAdapter
     end
 
     # Returns an array of indexes for the given table.
-    def indexes(table_name, name = nil)
+    def indexes(table_name, _name = nil)
       stmt   = @connection.indexes(native_case(table_name.to_s))
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
@@ -38,7 +38,7 @@ module ODBCAdapter
 
       result.each_with_object([]).with_index do |(row, indices), row_idx|
         # Skip table statistics
-        next if row[6] == 0 # SQLStatistics: TYPE
+        next if row[6].zero? # SQLStatistics: TYPE
 
         if row[7] == 1 # SQLStatistics: ORDINAL_POSITION
           # Start of column descriptor block for next index
@@ -50,7 +50,7 @@ module ODBCAdapter
         index_cols << format_case(row[8]) # SQLStatistics: COLUMN_NAME
         next_row = result[row_idx + 1]
 
-        if (row_idx == result.length - 1) || (next_row[6] == 0 || next_row[7] == 1)
+        if (row_idx == result.length - 1) || (next_row[6].zero? || next_row[7] == 1)
           indices << ActiveRecord::ConnectionAdapters::IndexDefinition.new(table_name, format_case(index_name), unique, index_cols)
         end
       end
@@ -58,7 +58,7 @@ module ODBCAdapter
 
     # Returns an array of Column objects for the table specified by
     # +table_name+.
-    def columns(table_name, name = nil)
+    def columns(table_name, _name = nil)
       stmt   = @connection.columns(native_case(table_name.to_s))
       result = stmt.fetch_all || []
       stmt.drop
@@ -104,7 +104,9 @@ module ODBCAdapter
         fk_from_table      = key[2]  # PKTABLE_NAME
         fk_to_table        = key[6]  # FKTABLE_NAME
 
-        ActiveRecord::ConnectionAdapters::ForeignKeyDefinition.new(fk_from_table, fk_to_table,
+        ActiveRecord::ConnectionAdapters::ForeignKeyDefinition.new(
+          fk_from_table,
+          fk_to_table,
           name:        key[11], # FK_NAME
           column:      key[3],  # PKCOLUMN_NAME
           primary_key: key[7],  # FKCOLUMN_NAME
