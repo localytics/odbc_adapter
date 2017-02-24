@@ -16,7 +16,7 @@ module ODBCAdapter
       # Explicitly turning off prepared statements in the MySQL adapter because
       # of a weird bug with SQLDescribeParam returning a string type for LIMIT
       # parameters. This is blocking them from running with an error:
-      # 
+      #
       #     You have an error in your SQL syntax; ...
       #     ... right syntax to use near ''1'' at line 1: ...
       def prepared_statements
@@ -49,11 +49,11 @@ module ODBCAdapter
         0
       end
 
-      def disable_referential_integrity(&block)
-        old = select_value("SELECT @@FOREIGN_KEY_CHECKS")
+      def disable_referential_integrity(&_block)
+        old = select_value('SELECT @@FOREIGN_KEY_CHECKS')
 
         begin
-          update("SET FOREIGN_KEY_CHECKS = 0")
+          update('SET FOREIGN_KEY_CHECKS = 0')
           yield
         ensure
           update("SET FOREIGN_KEY_CHECKS = #{old}")

@@ -6,7 +6,7 @@ module ODBCAdapter
       BOOLEAN_TYPE = 'bool'.freeze
       PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
 
-      alias :create :insert
+      alias create insert
 
       # Override to handle booleans appropriately
       def native_database_types
@@ -35,7 +35,7 @@ module ODBCAdapter
         "#{table_name}_#{pk || 'id'}_seq"
       end
 
-      def sql_for_insert(sql, pk, id_value, sequence_name, binds)
+      def sql_for_insert(sql, pk, _id_value, _sequence_name, binds)
         unless pk
           table_ref = extract_table_ref_from_insert_sql(sql)
           pk = primary_key(table_ref) if table_ref
@@ -94,7 +94,7 @@ module ODBCAdapter
           when :connection_limit
             " CONNECTION LIMIT = #{value}"
           else
-            ""
+            ''
           end
         end
 
@@ -131,7 +131,7 @@ module ODBCAdapter
         execute("DROP INDEX #{quote_table_name(index_name)}")
       end
 
-      def rename_index(table_name, old_name, new_name)
+      def rename_index(_table_name, old_name, new_name)
         execute("ALTER INDEX #{quote_column_name(old_name)} RENAME TO #{quote_table_name(new_name)}")
       end
 
@@ -149,8 +149,8 @@ module ODBCAdapter
         # Construct a clean list of column names from the ORDER BY clause,
         # removing any ASC/DESC modifiers
         order_columns = orders.map { |s| s.gsub(/\s+(ASC|DESC)\s*(NULLS\s+(FIRST|LAST)\s*)?/i, '') }
-        order_columns.reject! { |c| c.blank? }
-        order_columns = order_columns.zip((0...order_columns.size).to_a).map { |s,i| "#{s} AS alias_#{i}" }
+        order_columns.reject!(&:blank?)
+        order_columns = order_columns.zip((0...order_columns.size).to_a).map { |s, i| "#{s} AS alias_#{i}" }
 
         "DISTINCT #{columns}, #{order_columns * ', '}"
       end

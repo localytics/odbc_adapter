@@ -11,7 +11,7 @@ module ODBCAdapter
       SQL_MAX_TABLE_NAME_LEN
       SQL_USER_NAME
       SQL_DATABASE_NAME
-    ]
+    ].freeze
 
     attr_reader :values
 

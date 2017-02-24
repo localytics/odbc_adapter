@@ -18,6 +18,7 @@ require 'odbc_adapter/version'
 module ActiveRecord
   class Base
     class << self
+      # Build a new ODBC connection with the given configuration.
       def odbc_connection(config)
         config = config.symbolize_keys
 
@@ -27,7 +28,7 @@ module ActiveRecord
           elsif config.key?(:conn_str)
             odbc_conn_str_connection(config)
           else
-            raise ArgumentError, "No data source name (:dsn) or connection string (:conn_str) specified."
+            raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
           end
 
         database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
@@ -36,6 +37,7 @@ module ActiveRecord
 
       private
 
+      # Connect using a predefined DSN.
       def odbc_dsn_connection(config)
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
@@ -48,16 +50,9 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        connstr_keyval_pairs = config[:conn_str].split(';')
-
         driver = ODBC::Driver.new
         driver.name = 'odbc'
-        driver.attrs = {}
-
-        connstr_keyval_pairs.each do |pair|
-          keyval = pair.split('=')
-          driver.attrs[keyval[0]] = keyval[1] if keyval.length == 2
-        end
+        driver.attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
 
         connection = ODBC::Database.new.drvconnect(driver)
         [connection, config.merge(driver: driver)]
@@ -75,10 +70,12 @@ module ActiveRecord
       ADAPTER_NAME = 'ODBC'.freeze
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
 
-      ERR_DUPLICATE_KEY_VALUE     = 23505
-      ERR_QUERY_TIMED_OUT         = 57014
+      ERR_DUPLICATE_KEY_VALUE     = 23_505
+      ERR_QUERY_TIMED_OUT         = 57_014
       ERR_QUERY_TIMED_OUT_MESSAGE = /Query has timed out/
 
+      # The object that stores the information that is fetched from the DBMS
+      # when a connection is first established.
       attr_reader :database_metadata
 
       def initialize(connection, logger, config, database_metadata)
@@ -86,23 +83,22 @@ module ActiveRecord
         @database_metadata = database_metadata
       end
 
-      # Returns the human-readable name of the adapter. Use mixed case - one
-      # can always use downcase if needed.
+      # Returns the human-readable name of the adapter.
       def adapter_name
         ADAPTER_NAME
       end
 
-      # Does this adapter support migrations? Backend specific, as the
-      # abstract adapter always returns +false+.
+      # Does this adapter support migrations? Backend specific, as the abstract
+      # adapter always returns +false+.
       def supports_migrations?
         true
       end
 
       # CONNECTION MANAGEMENT ====================================
 
-      # Checks whether the connection to the database is still active. This includes
-      # checking whether the database is actually capable of responding, i.e. whether
-      # the connection isn't stale.
+      # Checks whether the connection to the database is still active. This
+      # includes checking whether the database is actually capable of
+      # responding, i.e. whether the connection isn't stale.
       def active?
         @connection.connected?
       end
@@ -119,7 +115,7 @@ module ActiveRecord
           end
         super
       end
-      alias :reset! :reconnect!
+      alias reset! reconnect!
 
       # Disconnects from the database if already connected. Otherwise, this
       # method does nothing.
@@ -127,12 +123,16 @@ module ActiveRecord
         @connection.disconnect if @connection.connected?
       end
 
+      # Build a new column object from the given options. Effectively the same
+      # as super except that it also passes in the native type.
+      # rubocop:disable Metrics/ParameterLists
       def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
       end
 
       protected
 
+      # Build the type map for ActiveRecord
       def initialize_type_map(map)
         map.register_type 'boolean',              Type::Boolean.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
@@ -165,13 +165,14 @@ module ActiveRecord
         alias_type map, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP
       end
 
+      # Translate an exception from the native DBMS to something usable by
+      # ActiveRecord.
       def translate_exception(exception, message)
         error_number = exception.message[/^\d+/].to_i
 
-        case
-        when error_number == ERR_DUPLICATE_KEY_VALUE
+        if error_number == ERR_DUPLICATE_KEY_VALUE
           ActiveRecord::RecordNotUnique.new(message, exception)
-        when error_number == ERR_QUERY_TIMED_OUT, exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
+        elsif error_number == ERR_QUERY_TIMED_OUT || exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
           ::ODBCAdapter::QueryTimeoutError.new(message, exception)
         else
           super
@@ -180,6 +181,9 @@ module ActiveRecord
 
       private
 
+      # Can't use the built-in ActiveRecord map#alias_type because it doesn't
+      # work with non-string keys, and in our case the keys are (almost) all
+      # numeric
       def alias_type(map, new_type, old_type)
         map.register_type(new_type) do |_, *args|
           map.lookup(old_type, *args)

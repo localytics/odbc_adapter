@@ -7,7 +7,7 @@ class AttributesTest < Minitest::Test
   end
 
   def test_integers
-    assert_kind_of Fixnum, User.first.letters
+    assert_kind_of Integer, User.first.letters
   end
 
   def test_strings

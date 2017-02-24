@@ -20,7 +20,7 @@ module ODBCAdapter
     # Executes +sql+ statement in the context of this connection using
     # +binds+ as the bind substitutes. +name+ is logged along with
     # the executed +sql+ statement.
-    def exec_query(sql, name = 'SQL', binds = [], prepare: false)
+    def exec_query(sql, name = 'SQL', binds = [], prepare: false) # rubocop:disable Lint/UnusedMethodArgument
       log(sql, name) do
         stmt =
           if prepared_statements
@@ -42,7 +42,7 @@ module ODBCAdapter
 
         values = dbms_type_cast(columns.values, values)
         column_names = columns.keys.map { |key| format_case(key) }
-        result = ActiveRecord::Result.new(column_names, values)
+        ActiveRecord::Result.new(column_names, values)
       end
     end
 
@@ -52,7 +52,7 @@ module ODBCAdapter
     def exec_delete(sql, name, binds)
       execute(sql, name, binds)
     end
-    alias :exec_update :exec_delete
+    alias exec_update exec_delete
 
     # Begins the transaction (and turns off auto-committing).
     def begin_db_transaction
@@ -81,7 +81,10 @@ module ODBCAdapter
 
     private
 
-    def dbms_type_cast(columns, values)
+    # A custom hook to allow end users to overwrite the type casting before it
+    # is returned to ActiveRecord. Useful before a full adapter has made its way
+    # back into this repository.
+    def dbms_type_cast(_columns, values)
       values
     end
 
@@ -122,7 +125,7 @@ module ODBCAdapter
 
     # Assume column is nullable if nullable == SQL_NULLABLE_UNKNOWN
     def nullability(col_name, is_nullable, nullable)
-      not_nullable = (!is_nullable || nullable.to_s.match('NO') != nil)
+      not_nullable = (!is_nullable || !nullable.to_s.match('NO').nil?)
       result = !(not_nullable || nullable == SQL_NO_NULLS)
 
       # HACK!
