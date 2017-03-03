@@ -5,6 +5,11 @@ class SelectionTest < Minitest::Test
     assert_equal 'Kevin', User.first.first_name
   end
 
+  def test_select_rows
+    query = 'SELECT first_name FROM users ORDER BY id LIMIT 2'
+    assert_equal %w[Kevin Michal], User.connection.select_rows(query).map(&:first)
+  end
+
   def test_pluck
     expected = %w[Ash Jason Kevin Michal Ryan Sharif]
     assert_equal expected, User.order(:first_name).pluck(:first_name)
