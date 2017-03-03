@@ -10,7 +10,8 @@ module ODBCAdapter
     def select_rows(sql, name = nil)
       log(sql, name) do
         stmt   = @connection.run(sql)
-        result = dbms_type_cast([], stmt.fetch_all)
+        result = stmt.fetch_all
+        result = dbms_type_cast([], result) if result
         stmt.drop
         result
       end
