@@ -1,6 +1,6 @@
 # ODBCAdapter
 
-[![Build Status](https://travis-ci.com/localytics/odbc_adapter.svg?token=kQUiABmGkzyHdJdMnCnv&branch=master)](https://travis-ci.com/localytics/odbc_adapter)
+[![Build Status](https://travis-ci.org/localytics/odbc_adapter.svg?branch=master)](https://travis-ci.org/localytics/odbc_adapter)
 
 An ActiveRecord ODBC adapter. Master branch is working off of Rails 5.0.1. Previous work has been done to make it compatible with Rails 3.2 and 4.2; for those versions use the 3.2.x or 4.2.x gem releases.
 
