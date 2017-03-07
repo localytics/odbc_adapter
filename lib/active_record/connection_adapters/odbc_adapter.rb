@@ -191,7 +191,7 @@ module ActiveRecord
         end
       end
 
-      # Ensure ODBC is mapping time-based fields to native ruby objects in UTC
+      # Ensure ODBC is mapping time-based fields to native ruby objects
       def configure_time_options(connection)
         connection.use_time = true
       end
