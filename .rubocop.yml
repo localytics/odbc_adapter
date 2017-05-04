@@ -1,9 +1,12 @@
 AllCops:
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.0
+  TargetRubyVersion: 2.1
   Exclude:
   - 'vendor/**/*'
+
+Lint/AmbiguousBlockAssociation:
+  Enabled: false
 
 Metrics/AbcSize:
   Enabled: false
@@ -28,5 +31,5 @@ Style/Documentation:
 
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
-    '%w': '[]'
-    '%i': '[]'
+    default: '[]'
+    '%r': '{}'

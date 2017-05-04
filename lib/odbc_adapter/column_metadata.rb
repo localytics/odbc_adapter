@@ -50,7 +50,7 @@ module ODBCAdapter
       # how closely the native type maps to that SQL type.
       # But, for :text and :binary, select the native type with the
       # largest capacity. (Compare SQLGetTypeInfo:COLUMN_SIZE values)
-      selected_row = rows.max_by { |row| row[2] } if [:text, :binary].include?(abstract)
+      selected_row = rows.max_by { |row| row[2] } if %i[text binary].include?(abstract)
       result = { name: selected_row[0] } # SQLGetTypeInfo: TYPE_NAME
 
       create_params = selected_row[5]
