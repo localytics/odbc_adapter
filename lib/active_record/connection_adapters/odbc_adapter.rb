@@ -30,7 +30,7 @@ module ActiveRecord
           end
 
         dbms = ::ODBCAdapter::DBMS.new(connection)
-        dbms.adapter_class.new(connection, logger, dbms)
+        dbms.adapter_class.new(connection, logger, dbms, config)
       end
 
       private
@@ -79,10 +79,11 @@ module ActiveRecord
 
       attr_reader :dbms
 
-      def initialize(connection, logger, dbms)
+      def initialize(connection, logger, dbms, options)
         super(connection, logger)
         @connection = connection
         @dbms       = dbms
+        @options    = options
         @visitor    = self.class::BindSubstitution.new(self)
       end
 
@@ -112,10 +113,10 @@ module ActiveRecord
       def reconnect!
         disconnect!
         @connection =
-          if options.key?(:dsn)
-            ODBC.connect(options[:dsn], options[:username], options[:password])
+          if @options.key?(:dsn)
+            ODBC.connect(@options[:dsn], @options[:username], @options[:password])
           else
-            ODBC::Database.new.drvconnect(options[:driver])
+            ODBC::Database.new.drvconnect(@options[:driver])
           end
         super
       end
