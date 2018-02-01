@@ -42,8 +42,7 @@ module ODBCAdapter
               adapter if reported =~ pattern
             end
 
-          raise ArgumentError, "ODBCAdapter: Unsupported database (#{reported})" if found.nil?
-          found.last
+          (found && found.last) || :Null
         end
     end
   end
