@@ -13,7 +13,7 @@ matrix:
         - unixodbc
         - unixodbc-dev
         - libmyodbc
-        - mysql-client
+        - mysql-client-5.6
     services:
       - mysql
   - rvm: 2.3.6
@@ -37,7 +37,7 @@ matrix:
         - unixodbc
         - unixodbc-dev
         - libmyodbc
-        - mysql-client
+        - mysql-client-5.6
     services:
       - mysql
   - rvm: 2.4.3
