@@ -30,7 +30,7 @@ module ActiveRecord
           end
 
         dbms = ::ODBCAdapter::DBMS.new(connection)
-        dbms.adapter_class.new(connection, logger, dbms, config)
+        dbms.adapter_class.new(connection, logger, dbms, options)
       end
 
       private
