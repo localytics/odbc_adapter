@@ -39,5 +39,6 @@ class ConnectionsTest < Minitest::Test
     assert_equal true, @connection.active?
     @connection.reconnect!
     refute_equal @old_raw_connection, @connection.raw_connection
+    assert_equal true, @connection.active?
   end
 end
