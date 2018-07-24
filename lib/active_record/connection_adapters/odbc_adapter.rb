@@ -55,7 +55,7 @@ module ActiveRecord
         driver.attrs = {}
 
         connstr_keyval_pairs.each do |pair|
-          keyval = pair.split('=')
+          keyval = pair.split('=', 2)
           driver.attrs[keyval[0]] = keyval[1] if keyval.length == 2
         end
 
