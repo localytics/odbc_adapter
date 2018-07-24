@@ -3,24 +3,73 @@ language: ruby
 cache: bundler
 matrix:
   include:
-  - rvm: 2.3.1
+  - rvm: 2.3.7
     env:
     - DB=mysql
     - CONN_STR='DRIVER=MySQL;SERVER=localhost;DATABASE=odbc_test;USER=root;PASSWORD=;'
     addons:
-      mysql: "5.5"
       apt:
         packages:
         - unixodbc
         - unixodbc-dev
         - libmyodbc
-        - mysql-client
-  - rvm: 2.3.1
+        - mysql-client-5.6
+    services:
+      - mysql
+  - rvm: 2.3.7
     env:
     - DB=postgresql
     - CONN_STR='DRIVER={PostgreSQL ANSI};SERVER=localhost;PORT=5432;DATABASE=odbc_test;UID=postgres;'
     addons:
-      postgresql: "9.1"
+      postgresql: "9.2"
+      apt:
+        packages:
+        - unixodbc
+        - unixodbc-dev
+        - odbc-postgresql
+  - rvm: 2.4.4
+    env:
+    - DB=mysql
+    - CONN_STR='DRIVER=MySQL;SERVER=localhost;DATABASE=odbc_test;USER=root;PASSWORD=;'
+    addons:
+      apt:
+        packages:
+        - unixodbc
+        - unixodbc-dev
+        - libmyodbc
+        - mysql-client-5.6
+    services:
+      - mysql
+  - rvm: 2.4.4
+    env:
+    - DB=postgresql
+    - CONN_STR='DRIVER={PostgreSQL ANSI};SERVER=localhost;PORT=5432;DATABASE=odbc_test;UID=postgres;'
+    addons:
+      postgresql: "9.2"
+      apt:
+        packages:
+        - unixodbc
+        - unixodbc-dev
+        - odbc-postgresql
+  - rvm: 2.5.1
+    env:
+    - DB=mysql
+    - CONN_STR='DRIVER=MySQL;SERVER=localhost;DATABASE=odbc_test;USER=root;PASSWORD=;'
+    addons:
+      apt:
+        packages:
+        - unixodbc
+        - unixodbc-dev
+        - libmyodbc
+        - mysql-client-5.6
+    services:
+      - mysql
+  - rvm: 2.5.1
+    env:
+    - DB=postgresql
+    - CONN_STR='DRIVER={PostgreSQL ANSI};SERVER=localhost;PORT=5432;DATABASE=odbc_test;UID=postgres;'
+    addons:
+      postgresql: "9.2"
       apt:
         packages:
         - unixodbc
