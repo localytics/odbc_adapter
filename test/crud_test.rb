@@ -27,7 +27,7 @@ class CRUDTest < Minitest::Test
 
   def test_record_not_unqiue
     with_transaction do
-      assert_raises ActiveRecord::RecordNotUnique do
+      assert_raises ActiveRecord::StatementInvalid do
         User.create(id: 1, first_name: 'Jack', last_name: 'Duplicate')
       end
     end
