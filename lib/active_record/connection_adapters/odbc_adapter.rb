@@ -163,7 +163,10 @@ module ActiveRecord
       def translate_exception(exception, message)
         case exception.message[/^\d+/].to_i
         when ERR_DUPLICATE_KEY_VALUE
-          ActiveRecord::RecordNotUnique.new(message, exception)
+          args = [message]
+          args << exception if ActiveRecord::RecordNotUnique.instance_method(:initialize).arity == 2
+
+          ActiveRecord::RecordNotUnique.new(*args)
         else
           super
         end
