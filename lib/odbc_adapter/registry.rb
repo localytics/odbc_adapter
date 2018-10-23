@@ -5,7 +5,8 @@ module ODBCAdapter
     def initialize
       @dbs = {
         /my.*sql/i  => :MySQL,
-        /postgres/i => :PostgreSQL
+        /postgres/i => :PostgreSQL,
+        /tree/i     => :Ctree,
       }
     end
 
