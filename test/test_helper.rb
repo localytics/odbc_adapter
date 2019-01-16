@@ -42,7 +42,7 @@ class User < ActiveRecord::Base
       { first_name: 'Jason', last_name: 'Dsouza', letters: 11 },
       { first_name: 'Ash', last_name: 'Hepburn', letters: 10 },
       { first_name: 'Sharif', last_name: 'Younes', letters: 12 },
-      { first_name: 'Ryan', last_name: 'Brown', letters: 9 }
+      { first_name: 'Ryan', last_name: 'Brüwn', letters: 9 }
     ]
   )
 end

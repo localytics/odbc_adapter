@@ -1,6 +1,7 @@
 require 'active_record'
 require 'arel/visitors/bind_visitor'
 require 'odbc'
+require 'odbc_utf8'
 
 require 'odbc_adapter/database_limits'
 require 'odbc_adapter/database_statements'
@@ -40,7 +41,9 @@ module ActiveRecord
       def odbc_dsn_connection(config)
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
-        connection = ODBC.connect(config[:dsn], username, password)
+        odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
+        connection = odbc_module.connect(config[:dsn], username, password)
+
         [connection, config.merge(username: username, password: password)]
       end
 
@@ -49,12 +52,14 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        driver = ODBC::Driver.new
+        attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        odbc_module = attrs['Encoding'] == 'utf8' ? ODBC_UTF8 : ODBC
+        driver = odbc_module::Driver.new
         driver.name = 'odbc'
-        driver.attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        driver.attrs = attrs
 
-        connection = ODBC::Database.new.drvconnect(driver)
-        [connection, config.merge(driver: driver)]
+        connection = odbc_module::Database.new.drvconnect(driver)
+        [connection, config.merge(driver: driver, encoding: attrs['Encoding'])]
       end
     end
   end
@@ -107,11 +112,12 @@ module ActiveRecord
       # new connection with the database.
       def reconnect!
         disconnect!
+        odbc_module = @config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         @connection =
           if @config.key?(:dsn)
-            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
+            odbc_module.connect(@config[:dsn], @config[:username], @config[:password])
           else
-            ODBC::Database.new.drvconnect(@config[:driver])
+            odbc_module::Database.new.drvconnect(@config[:driver])
           end
         configure_time_options(@connection)
         super
@@ -134,6 +140,7 @@ module ActiveRecord
       protected
 
       # Build the type map for ActiveRecord
+      # Here, ODBC and ODBC_UTF8 constants are interchangeable
       def initialize_type_map(map)
         map.register_type 'boolean',              Type::Boolean.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
