@@ -15,8 +15,14 @@ module ODBCAdapter
 
     attr_reader :values
 
-    def initialize(connection)
-      @values = Hash[FIELDS.map { |field| [field, connection.get_info(ODBC.const_get(field))] }]
+    def initialize(connection, has_encoding_bug = false)
+      puts "Encoding bug #{has_encoding_bug}"
+      @values = Hash[FIELDS.map do |field|
+        info = connection.get_info(ODBC.const_get(field))
+        info = info.bytes.each_with_index.flat_map { |c, idx| idx.even? ? [c] : [] }.pack('c*') if info.is_a?(String) && has_encoding_bug
+
+        [field, info]
+      end]
     end
 
     def adapter_class

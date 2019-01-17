@@ -31,7 +31,7 @@ module ActiveRecord
             raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
           end
 
-        database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
+        database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection, config[:encoding_bug])
         database_metadata.adapter_class.new(connection, logger, config, database_metadata)
       end
 
@@ -44,7 +44,7 @@ module ActiveRecord
         odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         connection = odbc_module.connect(config[:dsn], username, password)
 
-        [connection, config.merge(username: username, password: password)]
+        [connection, config.merge(username: username, password: password, encoding_bug: config[:encoding] == 'utf8')]
       end
 
       # Connect using ODBC connection string
@@ -59,7 +59,7 @@ module ActiveRecord
         driver.attrs = attrs
 
         connection = odbc_module::Database.new.drvconnect(driver)
-        [connection, config.merge(driver: driver, encoding: attrs['Encoding'])]
+        [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
       end
     end
   end
