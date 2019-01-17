@@ -1,6 +1,7 @@
 require 'active_record'
 require 'arel/visitors/bind_visitor'
 require 'odbc'
+require 'odbc_utf8'
 
 require 'odbc_adapter/database_limits'
 require 'odbc_adapter/database_statements'
@@ -30,7 +31,7 @@ module ActiveRecord
             raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
           end
 
-        database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection)
+        database_metadata = ::ODBCAdapter::DatabaseMetadata.new(connection, config[:encoding_bug])
         database_metadata.adapter_class.new(connection, logger, config, database_metadata)
       end
 
@@ -40,8 +41,11 @@ module ActiveRecord
       def odbc_dsn_connection(config)
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
-        connection = ODBC.connect(config[:dsn], username, password)
-        [connection, config.merge(username: username, password: password)]
+        odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
+        connection = odbc_module.connect(config[:dsn], username, password)
+
+        # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
+        [connection, config.merge(username: username, password: password, encoding_bug: config[:encoding] == 'utf8')]
       end
 
       # Connect using ODBC connection string
@@ -49,12 +53,15 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        driver = ODBC::Driver.new
+        attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        odbc_module = attrs['ENCODING'] == 'utf8' ? ODBC_UTF8 : ODBC
+        driver = odbc_module::Driver.new
         driver.name = 'odbc'
-        driver.attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        driver.attrs = attrs
 
-        connection = ODBC::Database.new.drvconnect(driver)
-        [connection, config.merge(driver: driver)]
+        connection = odbc_module::Database.new.drvconnect(driver)
+        # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
+        [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
       end
     end
   end
@@ -107,11 +114,12 @@ module ActiveRecord
       # new connection with the database.
       def reconnect!
         disconnect!
+        odbc_module = @config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         @connection =
           if @config.key?(:dsn)
-            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
+            odbc_module.connect(@config[:dsn], @config[:username], @config[:password])
           else
-            ODBC::Database.new.drvconnect(@config[:driver])
+            odbc_module::Database.new.drvconnect(@config[:driver])
           end
         configure_time_options(@connection)
         super
@@ -134,6 +142,7 @@ module ActiveRecord
       protected
 
       # Build the type map for ActiveRecord
+      # Here, ODBC and ODBC_UTF8 constants are interchangeable
       def initialize_type_map(map)
         map.register_type 'boolean',              Type::Boolean.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
