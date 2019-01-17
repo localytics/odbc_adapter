@@ -53,7 +53,7 @@ module ActiveRecord
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
         attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
-        odbc_module = attrs['Encoding'] == 'utf8' ? ODBC_UTF8 : ODBC
+        odbc_module = attrs['ENCODING'] == 'utf8' ? ODBC_UTF8 : ODBC
         driver = odbc_module::Driver.new
         driver.name = 'odbc'
         driver.attrs = attrs
