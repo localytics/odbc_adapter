@@ -41,8 +41,22 @@ module ActiveRecord
       def odbc_dsn_connection(config)
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
-        connection = ODBC.connect(config[:dsn], username, password)
-        [connection, config.merge(username: username, password: password)]
+
+        # If it includes only the DSN + credentials
+        if (config.keys - %i[adapter dsn username password]).empty?
+          connection = ODBC.connect(config[:dsn], username, password)
+          config = config.merge(username: username, password: password)
+        # Support additional overrides, e.g. host: db.example.com
+        else
+          driver_attrs = config.dup
+                               .delete_if { |k, _| %i[adapter username password].include?(k) }
+                               .merge(UID: username, PWD: password)
+
+          driver, connection = obdc_driver_connection(driver_attrs)
+          config = config.merge(driver: driver)
+        end
+
+        [connection, config]
       end
 
       # Connect using ODBC connection string
@@ -50,12 +64,20 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
+        driver_attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        driver, connection = obdc_driver_connection(driver_attrs)
+
+        [connection, config.merge(driver: driver)]
+      end
+
+      def obdc_driver_connection(driver_attrs)
         driver = ODBC::Driver.new
         driver.name = 'odbc'
-        driver.attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        driver.attrs = driver_attrs.stringify_keys
 
         connection = ODBC::Database.new.drvconnect(driver)
-        [connection, config.merge(driver: driver)]
+
+        [driver, connection]
       end
     end
   end
@@ -109,10 +131,10 @@ module ActiveRecord
       def reconnect!
         disconnect!
         @connection =
-          if @config.key?(:dsn)
-            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
-          else
+          if @config[:driver]
             ODBC::Database.new.drvconnect(@config[:driver])
+          else
+            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
           end
         configure_time_options(@connection)
         super
