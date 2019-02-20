@@ -17,6 +17,13 @@ module ODBCAdapter
         Arel::Visitors::PostgreSQL.new(self)
       end
 
+      # Explicitly disable prepared statements for now, as it's always erroring
+      # out with:
+      #   ODBC::Error: INTERN (0) [RubyODBC]Too much parameters
+      def prepared_statements
+        false
+      end
+
       # Filter for ODBCAdapter#tables
       # Omits table from #tables if table_filter returns true
       def table_filtered?(schema_name, table_type)
