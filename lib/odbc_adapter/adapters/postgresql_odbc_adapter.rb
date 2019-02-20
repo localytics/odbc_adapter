@@ -29,19 +29,19 @@ module ODBCAdapter
 
       # Returns the sequence name for a table's primary key or some other
       # specified key.
-      def default_sequence_name(table_name, pk = nil)
-        serial_sequence(table_name, pk || 'id').split('.').last
+      def default_sequence_name(table_name, pri_key = nil)
+        serial_sequence(table_name, pri_key || 'id').split('.').last
       rescue ActiveRecord::StatementInvalid
-        "#{table_name}_#{pk || 'id'}_seq"
+        "#{table_name}_#{pri_key || 'id'}_seq"
       end
 
-      def sql_for_insert(sql, pk, _id_value, _sequence_name, binds)
-        unless pk
+      def sql_for_insert(sql, pri_key, _id_value, _sequence_name, binds)
+        unless pri_key
           table_ref = extract_table_ref_from_insert_sql(sql)
-          pk = primary_key(table_ref) if table_ref
+          pri_key = primary_key(table_ref) if table_ref
         end
 
-        sql = "#{sql} RETURNING #{quote_column_name(pk)}" if pk
+        sql = "#{sql} RETURNING #{quote_column_name(pri_key)}" if pri_key
         [sql, binds]
       end
 
@@ -50,7 +50,7 @@ module ODBCAdapter
 
         case value
         when String
-          return super unless 'bytea' == column.native_type
+          return super unless column.native_type == 'bytea'
           { value: value, format: 1 }
         else
           super
@@ -158,14 +158,14 @@ module ODBCAdapter
       protected
 
       # Executes an INSERT query and returns the new record's ID
-      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
-        unless pk
+      def insert_sql(sql, name = nil, pri_key = nil, id_value = nil, sequence_name = nil)
+        unless pri_key
           table_ref = extract_table_ref_from_insert_sql(sql)
-          pk = primary_key(table_ref) if table_ref
+          pri_key = primary_key(table_ref) if table_ref
         end
 
-        if pk
-          select_value("#{sql} RETURNING #{quote_column_name(pk)}")
+        if pri_key
+          select_value("#{sql} RETURNING #{quote_column_name(pri_key)}")
         else
           super
         end
@@ -180,9 +180,9 @@ module ODBCAdapter
       private
 
       def serial_sequence(table, column)
-        result = exec_query(<<-eosql, 'SCHEMA')
+        result = exec_query(<<-EOSQL, 'SCHEMA')
           SELECT pg_get_serial_sequence('#{table}', '#{column}')
-        eosql
+        EOSQL
         result.rows.first.first
       end
     end

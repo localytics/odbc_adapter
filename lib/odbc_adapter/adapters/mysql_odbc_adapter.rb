@@ -143,7 +143,7 @@ module ODBCAdapter
 
       protected
 
-      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+      def insert_sql(sql, name = nil, pri_key = nil, id_value = nil, sequence_name = nil)
         super
         id_value || last_inserted_id(nil)
       end

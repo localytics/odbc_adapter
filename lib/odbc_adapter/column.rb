@@ -9,5 +9,6 @@ module ODBCAdapter
       super(name, default, sql_type_metadata, null, table_name, default_function, collation)
       @native_type = native_type
     end
+    # rubocop:enable Metrics/ParameterLists
   end
 end

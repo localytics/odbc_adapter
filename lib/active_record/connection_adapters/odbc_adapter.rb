@@ -130,6 +130,7 @@ module ActiveRecord
       def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
       end
+      # rubocop:enable Metrics/ParameterLists
 
       protected
 
