@@ -1,14 +1,24 @@
 require 'bundler/gem_tasks'
-require 'rake/testtask'
-require 'rubocop/rake_task'
 
-Rake::TestTask.new(:test) do |t|
-  t.libs << 'test'
-  t.libs << 'lib'
-  t.test_files = FileList['test/**/*_test.rb']
+task default: %i[rubocop test]
+
+desc 'Run rubocop'
+task :rubocop do
+  require 'rubocop/rake_task'
+
+  RuboCop::RakeTask.new do |task|
+    task.patterns = ['lib/**/*.rb']
+    task.formatters = ['simple']
+  end
 end
 
-RuboCop::RakeTask.new(:rubocop)
-Rake::Task[:test].prerequisites << :rubocop
+desc 'Run tests'
+task :test do
+  require 'rake/testtask'
 
-task default: :test
+  Rake::TestTask.new do |task|
+    task.libs << 'test'
+    task.libs << 'lib'
+    task.test_files = FileList['test/**/*_test.rb']
+  end
+end
