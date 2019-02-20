@@ -24,4 +24,5 @@ class RegistryTest < Minitest::Test
       end
     end
   end
+  # rubocop:enable Lint/NestedMethodDefinition
 end

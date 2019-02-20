@@ -1,10 +1,11 @@
 require 'simplecov'
 SimpleCov.start
 
-$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 require 'odbc_adapter'
 
 require 'minitest/autorun'
+require 'minitest/mock'
 require 'pry'
 
 options = { adapter: 'odbc' }
