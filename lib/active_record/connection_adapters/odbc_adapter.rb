@@ -76,9 +76,11 @@ module ActiveRecord
       ADAPTER_NAME = 'ODBC'.freeze
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
 
-      ERR_DUPLICATE_KEY_VALUE     = 23_505
-      ERR_QUERY_TIMED_OUT         = 57_014
-      ERR_QUERY_TIMED_OUT_MESSAGE = /Query has timed out/
+      ERR_DUPLICATE_KEY_VALUE                     = 23_505
+      ERR_QUERY_TIMED_OUT                         = 57_014
+      ERR_QUERY_TIMED_OUT_MESSAGE                 = /Query has timed out/
+      ERR_CONNECTION_FAILED_REGEX                 = '^08[0S]0[12347]'.freeze
+      ERR_CONNECTION_FAILED_MESSAGE               = /Client connection failed/
 
       # The object that stores the information that is fetched from the DBMS
       # when a connection is first established.
@@ -184,6 +186,13 @@ module ActiveRecord
           ActiveRecord::RecordNotUnique.new(message, exception)
         elsif error_number == ERR_QUERY_TIMED_OUT || exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
           ::ODBCAdapter::QueryTimeoutError.new(message, exception)
+        elsif exception.message.match(ERR_CONNECTION_FAILED_REGEX) || exception.message =~ ERR_CONNECTION_FAILED_MESSAGE
+          begin
+            reconnect!
+            ::ODBCAdapter::ConnectionFailedError.new(message, exception)
+          rescue => e
+            puts "unable to reconnect #{e}"
+          end
         else
           super
         end
