@@ -1,0 +1,200 @@
+require 'active_record'
+require 'arel/visitors/bind_visitor'
+require 'odbc_utf8'
+
+require 'odbc_utf8_adapter/database_limits'
+require 'odbc_utf8_adapter/database_statements'
+require 'odbc_utf8_adapter/error'
+require 'odbc_utf8_adapter/quoting'
+require 'odbc_utf8_adapter/schema_statements'
+
+require 'odbc_utf8_adapter/column'
+require 'odbc_utf8_adapter/column_metadata'
+require 'odbc_utf8_adapter/database_metadata'
+require 'odbc_utf8_adapter/registry'
+require 'odbc_utf8_adapter/version'
+
+module ActiveRecord
+  class Base
+    class << self
+      # Build a new ODBC connection with the given configuration.
+      def odbc_utf8_connection(config)
+        config = config.symbolize_keys
+
+        connection, config =
+          if config.key?(:dsn)
+            odbc_utf8_dsn_connection(config)
+          elsif config.key?(:conn_str)
+            odbc_utf8_conn_str_connection(config)
+          else
+            raise ArgumentError, 'No data source name (:dsn) or connection string (:conn_str) specified.'
+          end
+
+        database_metadata = ::ODBCUTF8Adapter::DatabaseMetadata.new(connection)
+        database_metadata.adapter_class.new(connection, logger, config, database_metadata)
+      end
+
+      private
+
+      # Connect using a predefined DSN.
+      def odbc_utf8_dsn_connection(config)
+        username   = config[:username] ? config[:username].to_s : nil
+        password   = config[:password] ? config[:password].to_s : nil
+        connection = ODBC_UTF8.connect(config[:dsn], username, password)
+        [connection, config.merge(username: username, password: password)]
+      end
+
+      # Connect using ODBC connection string
+      # Supports DSN-based or DSN-less connections
+      # e.g. "DSN=virt5;UID=rails;PWD=rails"
+      #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
+      def odbc_utf8_conn_str_connection(config)
+        driver = ODBC_UTF8::Driver.new
+        driver.name = 'odbc_utf8'
+        driver.attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+
+        connection = ODBC_UTF8::Database.new.drvconnect(driver)
+        [connection, config.merge(driver: driver)]
+      end
+    end
+  end
+
+  module ConnectionAdapters
+    class ODBCUTF8Adapter < AbstractAdapter
+      include ::ODBCUTF8Adapter::DatabaseLimits
+      include ::ODBCUTF8Adapter::DatabaseStatements
+      include ::ODBCUTF8Adapter::Quoting
+      include ::ODBCUTF8Adapter::SchemaStatements
+
+      ADAPTER_NAME = 'ODBC_UTF8'.freeze
+      BOOLEAN_TYPE = 'BOOLEAN'.freeze
+
+      ERR_DUPLICATE_KEY_VALUE     = 23_505
+      ERR_QUERY_TIMED_OUT         = 57_014
+      ERR_QUERY_TIMED_OUT_MESSAGE = /Query has timed out/
+
+      # The object that stores the information that is fetched from the DBMS
+      # when a connection is first established.
+      attr_reader :database_metadata
+
+      def initialize(connection, logger, config, database_metadata)
+        configure_time_options(connection)
+        super(connection, logger, config)
+        @database_metadata = database_metadata
+      end
+
+      # Returns the human-readable name of the adapter.
+      def adapter_name
+        ADAPTER_NAME
+      end
+
+      # Does this adapter support migrations? Backend specific, as the abstract
+      # adapter always returns +false+.
+      def supports_migrations?
+        true
+      end
+
+      # CONNECTION MANAGEMENT ====================================
+
+      # Checks whether the connection to the database is still active. This
+      # includes checking whether the database is actually capable of
+      # responding, i.e. whether the connection isn't stale.
+      def active?
+        @connection.connected?
+      end
+
+      # Disconnects from the database if already connected, and establishes a
+      # new connection with the database.
+      def reconnect!
+        disconnect!
+        @connection =
+          if @config.key?(:dsn)
+            ODBC_UTF8.connect(@config[:dsn], @config[:username], @config[:password])
+          else
+            ODBC_UTF8::Database.new.drvconnect(@config[:driver])
+          end
+        configure_time_options(@connection)
+        super
+      end
+      alias reset! reconnect!
+
+      # Disconnects from the database if already connected. Otherwise, this
+      # method does nothing.
+      def disconnect!
+        @connection.disconnect if @connection.connected?
+      end
+
+      # Build a new column object from the given options. Effectively the same
+      # as super except that it also passes in the native type.
+      # rubocop:disable Metrics/ParameterLists
+      def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
+        ::ODBCUTF8Adapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
+      end
+
+      protected
+
+      # Build the type map for ActiveRecord
+      def initialize_type_map(map)
+        map.register_type 'boolean',              Type::Boolean.new
+        map.register_type ODBC_UTF8::SQL_CHAR,         Type::String.new
+        map.register_type ODBC_UTF8::SQL_LONGVARCHAR,  Type::Text.new
+        map.register_type ODBC_UTF8::SQL_TINYINT,      Type::Integer.new(limit: 4)
+        map.register_type ODBC_UTF8::SQL_SMALLINT,     Type::Integer.new(limit: 8)
+        map.register_type ODBC_UTF8::SQL_INTEGER,      Type::Integer.new(limit: 16)
+        map.register_type ODBC_UTF8::SQL_BIGINT,       Type::BigInteger.new(limit: 32)
+        map.register_type ODBC_UTF8::SQL_REAL,         Type::Float.new(limit: 24)
+        map.register_type ODBC_UTF8::SQL_FLOAT,        Type::Float.new
+        map.register_type ODBC_UTF8::SQL_DOUBLE,       Type::Float.new(limit: 53)
+        map.register_type ODBC_UTF8::SQL_DECIMAL,      Type::Float.new
+        map.register_type ODBC_UTF8::SQL_NUMERIC,      Type::Integer.new
+        map.register_type ODBC_UTF8::SQL_BINARY,       Type::Binary.new
+        map.register_type ODBC_UTF8::SQL_DATE,         Type::Date.new
+        map.register_type ODBC_UTF8::SQL_DATETIME,     Type::DateTime.new
+        map.register_type ODBC_UTF8::SQL_TIME,         Type::Time.new
+        map.register_type ODBC_UTF8::SQL_TIMESTAMP,    Type::DateTime.new
+        map.register_type ODBC_UTF8::SQL_GUID,         Type::String.new
+
+        alias_type map, ODBC_UTF8::SQL_BIT,            'boolean'
+        alias_type map, ODBC_UTF8::SQL_VARCHAR,        ODBC_UTF8::SQL_CHAR
+        alias_type map, ODBC_UTF8::SQL_WCHAR,          ODBC_UTF8::SQL_CHAR
+        alias_type map, ODBC_UTF8::SQL_WVARCHAR,       ODBC_UTF8::SQL_CHAR
+        alias_type map, ODBC_UTF8::SQL_WLONGVARCHAR,   ODBC_UTF8::SQL_LONGVARCHAR
+        alias_type map, ODBC_UTF8::SQL_VARBINARY,      ODBC_UTF8::SQL_BINARY
+        alias_type map, ODBC_UTF8::SQL_LONGVARBINARY,  ODBC_UTF8::SQL_BINARY
+        alias_type map, ODBC_UTF8::SQL_TYPE_DATE,      ODBC_UTF8::SQL_DATE
+        alias_type map, ODBC_UTF8::SQL_TYPE_TIME,      ODBC_UTF8::SQL_TIME
+        alias_type map, ODBC_UTF8::SQL_TYPE_TIMESTAMP, ODBC_UTF8::SQL_TIMESTAMP
+      end
+
+      # Translate an exception from the native DBMS to something usable by
+      # ActiveRecord.
+      def translate_exception(exception, message)
+        error_number = exception.message[/^\d+/].to_i
+
+        if error_number == ERR_DUPLICATE_KEY_VALUE
+          ActiveRecord::RecordNotUnique.new(message, exception)
+        elsif error_number == ERR_QUERY_TIMED_OUT || exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
+          ::ODBCAdapter::QueryTimeoutError.new(message, exception)
+        else
+          super
+        end
+      end
+
+      private
+
+      # Can't use the built-in ActiveRecord map#alias_type because it doesn't
+      # work with non-string keys, and in our case the keys are (almost) all
+      # numeric
+      def alias_type(map, new_type, old_type)
+        map.register_type(new_type) do |_, *args|
+          map.lookup(old_type, *args)
+        end
+      end
+
+      # Ensure ODBC is mapping time-based fields to native ruby objects
+      def configure_time_options(connection)
+        connection.use_time = true
+      end
+    end
+  end
+end
