@@ -6,7 +6,8 @@ module ODBCAdapter
       PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
 
       class BindSubstitution < Arel::Visitors::MySQL
-        include Arel::Visitors::BindVisitor
+        # BindVisitor was removed in Arel 9 aka Rails 5.2
+        include Arel::Visitors::BindVisitor if Arel::VERSION.to_i < 9
       end
 
       def arel_visitor
@@ -143,7 +144,7 @@ module ODBCAdapter
 
       protected
 
-      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil)
+      def insert_sql(sql, name = nil, pri_key = nil, id_value = nil, sequence_name = nil)
         super
         id_value || last_inserted_id(nil)
       end

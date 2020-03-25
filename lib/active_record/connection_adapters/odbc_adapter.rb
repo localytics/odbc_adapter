@@ -1,5 +1,6 @@
 require 'active_record'
-require 'arel/visitors/bind_visitor'
+# BindVisitor was removed in Arel 9 aka Rails 5.2
+require 'arel/visitors/bind_visitor' if Arel::VERSION.to_i < 9
 require 'odbc'
 require 'odbc_utf8'
 
@@ -41,11 +42,22 @@ module ActiveRecord
       def odbc_dsn_connection(config)
         username   = config[:username] ? config[:username].to_s : nil
         password   = config[:password] ? config[:password].to_s : nil
-        odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
-        connection = odbc_module.connect(config[:dsn], username, password)
 
-        # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
-        [connection, config.merge(username: username, password: password, encoding_bug: config[:encoding] == 'utf8')]
+        # If it includes only the DSN + credentials
+        if (config.keys - %i[adapter dsn username password]).empty?
+          connection = ODBC.connect(config[:dsn], username, password)
+          config = config.merge(username: username, password: password)
+        # Support additional overrides, e.g. host: db.example.com
+        else
+          driver_attrs = config.dup
+                               .delete_if { |k, _| %i[adapter username password].include?(k) }
+                               .merge(UID: username, PWD: password)
+
+          driver, connection = obdc_driver_connection(driver_attrs)
+          config = config.merge(driver: driver)
+        end
+
+        [connection, config]
       end
 
       # Connect using ODBC connection string
@@ -53,15 +65,20 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
-        odbc_module = attrs['ENCODING'] == 'utf8' ? ODBC_UTF8 : ODBC
-        driver = odbc_module::Driver.new
-        driver.name = 'odbc'
-        driver.attrs = attrs
+        driver_attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        driver, connection = obdc_driver_connection(driver_attrs)
 
-        connection = odbc_module::Database.new.drvconnect(driver)
-        # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
-        [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
+        [connection, config.merge(driver: driver)]
+      end
+
+      def obdc_driver_connection(driver_attrs)
+        driver = ODBC::Driver.new
+        driver.name = 'odbc'
+        driver.attrs = driver_attrs.stringify_keys
+
+        connection = ODBC::Database.new.drvconnect(driver)
+
+        [driver, connection]
       end
     end
   end
@@ -118,10 +135,10 @@ module ActiveRecord
         disconnect!
         odbc_module = @config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         @connection =
-          if @config.key?(:dsn)
-            odbc_module.connect(@config[:dsn], @config[:username], @config[:password])
+          if @config[:driver]
+            ODBC::Database.new.drvconnect(@config[:driver])
           else
-            odbc_module::Database.new.drvconnect(@config[:driver])
+            ODBC.connect(@config[:dsn], @config[:username], @config[:password])
           end
         configure_time_options(@connection)
         super
@@ -140,6 +157,7 @@ module ActiveRecord
       def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
       end
+      # rubocop:enable Metrics/ParameterLists
 
       protected
 
@@ -183,7 +201,7 @@ module ActiveRecord
         error_number = exception.message[/^\d+/].to_i
 
         if error_number == ERR_DUPLICATE_KEY_VALUE
-          ActiveRecord::RecordNotUnique.new(message, exception)
+          ActiveRecord::RecordNotUnique.new(message)
         elsif error_number == ERR_QUERY_TIMED_OUT || exception.message =~ ERR_QUERY_TIMED_OUT_MESSAGE
           ::ODBCAdapter::QueryTimeoutError.new(message, exception)
         elsif exception.message.match(ERR_CONNECTION_FAILED_REGEX) || exception.message =~ ERR_CONNECTION_FAILED_MESSAGE

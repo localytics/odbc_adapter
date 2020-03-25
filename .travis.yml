@@ -1,29 +1,43 @@
 sudo: required
 language: ruby
 cache: bundler
-matrix:
-  include:
-  - rvm: 2.3.1
-    env:
-    - DB=mysql
-    - CONN_STR='DRIVER=MySQL;SERVER=localhost;DATABASE=odbc_test;USER=root;PASSWORD=;'
-    addons:
-      mysql: "5.5"
-      apt:
-        packages:
-        - unixodbc
-        - unixodbc-dev
-        - libmyodbc
-        - mysql-client
-  - rvm: 2.3.1
-    env:
-    - DB=postgresql
-    - CONN_STR='DRIVER={PostgreSQL ANSI};SERVER=localhost;PORT=5432;DATABASE=odbc_test;UID=postgres;'
-    addons:
-      postgresql: "9.1"
-      apt:
-        packages:
-        - unixodbc
-        - unixodbc-dev
-        - odbc-postgresql
-before_script: bin/ci-setup
+
+services:
+  - postgresql
+  - mysql
+
+addons:
+  apt:
+    packages:
+    - unixodbc
+    - unixodbc-dev
+    # MySQL
+    - libmyodbc
+    - mysql-client-5.6
+    # Postgres
+    - odbc-postgresql
+
+rvm:
+  - 2.3
+  - 2.4
+  - 2.5
+
+env:
+  - DB=mysql CONN_STR='DRIVER=MySQL;SERVER=localhost;DATABASE=odbc_test;USER=root;PASSWORD=;'
+  - DB=postgresql CONN_STR='DRIVER={PostgreSQL ANSI};SERVER=localhost;PORT=5432;DATABASE=odbc_test;UID=postgres;'
+
+before_install:
+  - gem update --system
+
+gemfile:
+  - gemfiles/active_record_5_0.gemfile
+  - gemfiles/active_record_5_1.gemfile
+  - gemfiles/active_record_5_2.gemfile
+
+before_script:
+  - sh -c "if [ '$DB' = 'mysql' ]; then sudo odbcinst -i -d -f /usr/share/libmyodbc/odbcinst.ini; fi"
+  - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'DROP DATABASE IF EXISTS odbc_test; CREATE DATABASE IF NOT EXISTS odbc_test;' -uroot; fi"
+  - sh -c "if [ '$DB' = 'mysql' ]; then mysql -e 'GRANT ALL PRIVILEGES ON *.* TO "root"@"localhost";' -uroot; fi"
+
+  - sh -c "if [ '$DB' = 'postgresql' ]; then sudo odbcinst -i -d -f /usr/share/psqlodbc/odbcinst.ini.template; fi"
+  - sh -c "if [ '$DB' = 'postgresql' ]; then psql -c 'CREATE DATABASE odbc_test;' -U postgres; fi"
