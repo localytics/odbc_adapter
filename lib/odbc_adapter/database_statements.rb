@@ -10,7 +10,7 @@ module ODBCAdapter
     def execute(sql, name = nil, binds = [])
       log(sql, name) do
         if prepared_statements
-          @connection.do(sql, *prepared_binds(binds))
+          @connection.do(prepare_statement_sub(sql), *prepared_binds(binds))
         else
           @connection.do(sql)
         end
@@ -24,7 +24,7 @@ module ODBCAdapter
       log(sql, name) do
         stmt =
           if prepared_statements
-            @connection.run(sql, *prepared_binds(binds))
+            @connection.do(prepare_statement_sub(sql), *prepared_binds(binds))
           else
             @connection.run(sql)
           end
@@ -127,8 +127,13 @@ module ODBCAdapter
       col_name == 'id' ? false : result
     end
 
+    # Adapt to Rails 5.2
+    def prepare_statement_sub(sql)
+      sql.gsub(/\$\d+/, '?')
+    end
+
     def prepared_binds(binds)
-      prepare_binds_for_database(binds).map { |bind| _type_cast(bind) }
+      binds.map(&:value_for_database).map { |bind| _type_cast(bind) }
     end
   end
 end
