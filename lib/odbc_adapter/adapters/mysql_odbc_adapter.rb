@@ -5,12 +5,8 @@ module ODBCAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
       PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
 
-      class BindSubstitution < Arel::Visitors::MySQL
-        include Arel::Visitors::BindVisitor
-      end
-
       def arel_visitor
-        BindSubstitution.new(self)
+        Arel::Visitors::MySQL.new(self)
       end
 
       # Explicitly turning off prepared statements in the MySQL adapter because
