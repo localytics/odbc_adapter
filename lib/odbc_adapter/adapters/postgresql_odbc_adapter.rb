@@ -35,7 +35,7 @@ module ODBCAdapter
         "#{table_name}_#{pk || 'id'}_seq"
       end
 
-      def sql_for_insert(sql, pk, _id_value, _sequence_name, binds)
+      def sql_for_insert(sql, pk, binds)
         unless pk
           table_ref = extract_table_ref_from_insert_sql(sql)
           pk = primary_key(table_ref) if table_ref
