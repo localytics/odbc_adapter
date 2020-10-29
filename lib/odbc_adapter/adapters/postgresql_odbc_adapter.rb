@@ -7,14 +7,13 @@ module ODBCAdapter
       PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
       VARIANT_TYPE = 'VARIANT'.freeze
       DATE_TYPE = 'DATE'.freeze
-      JSON_TYPE = 'json'.freeze
+      JSON_TYPE = 'JSON'.freeze
 
       alias create insert
 
       # Override to handle booleans appropriately
       def native_database_types
         @native_database_types ||= super.merge(boolean: { name: 'bool' })
-        @native_database_types ||= super.merge(json: { name: 'json' })
       end
 
       def arel_visitor
