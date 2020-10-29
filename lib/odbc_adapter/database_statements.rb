@@ -28,12 +28,6 @@ module ODBCAdapter
 
         values = dbms_type_cast(columns.values, values)
         column_names = columns.keys.map { |key| format_case(key) }
-        upcase_coulmn_names = columns.keys
-        values.each.with_index(0) do |_row_value, row_index|
-          columns.each.with_index(0) do |_col_value, col_index|
-            values[row_index][col_index] = json_parsing(values[row_index][col_index], columns[upcase_coulmn_names[col_index]])
-          end
-        end
         ActiveRecord::Result.new(column_names, values)
       end
     end
@@ -77,17 +71,6 @@ module ODBCAdapter
     # is returned to ActiveRecord. Useful before a full adapter has made its way
     # back into this repository.
     def dbms_type_cast(_columns, values)
-      values
-    end
-
-    # A custom fuction to check the string and json column.
-    # If the column value is string, JSON.parse will raise expection, which will just
-    # return the original value, Otherwise this will return parsed value.
-    def json_parsing(values, column)
-      return values unless column.type == SQL_CHARACTER_VARYING_DATATYPE && values.include?('{') && values.include?('}')
-
-      JSON.parse values
-    rescue
       values
     end
 
