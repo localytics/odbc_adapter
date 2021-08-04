@@ -1,9 +1,6 @@
 # ODBCAdapter
 
-[![Build Status](https://travis-ci.org/localytics/odbc_adapter.svg?branch=master)](https://travis-ci.org/localytics/odbc_adapter)
-[![Gem](https://img.shields.io/gem/v/odbc_adapter.svg)](https://rubygems.org/gems/odbc_adapter)
-
-An ActiveRecord ODBC adapter. Master branch is working off of Rails 5.0.1. Previous work has been done to make it compatible with Rails 3.2 and 4.2; for those versions use the 3.2.x or 4.2.x gem releases.
+An ActiveRecord ODBC adapter. Pattern has made some updates to get this working with Rails 6 as forked from repo was not actively being maintained to do so.
 
 This adapter will work for basic queries for most DBMSs out of the box, without support for migrations. Full support is built-in for MySQL 5 and PostgreSQL 9 databases. You can register your own adapter to get more support for your DBMS using the `ODBCAdapter.register` function.
 
