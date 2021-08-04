@@ -1,5 +1,4 @@
 require 'active_record'
-require 'arel/visitors/bind_visitor'
 require 'odbc'
 require 'odbc_utf8'
 
@@ -75,6 +74,9 @@ module ActiveRecord
 
       ADAPTER_NAME = 'ODBC'.freeze
       BOOLEAN_TYPE = 'BOOLEAN'.freeze
+      VARIANT_TYPE = 'VARIANT'.freeze
+      DATE_TYPE = 'DATE'.freeze
+      JSON_TYPE = 'JSON'.freeze
 
       ERR_DUPLICATE_KEY_VALUE                     = 23_505
       ERR_QUERY_TIMED_OUT                         = 57_014
@@ -137,8 +139,8 @@ module ActiveRecord
       # Build a new column object from the given options. Effectively the same
       # as super except that it also passes in the native type.
       # rubocop:disable Metrics/ParameterLists
-      def new_column(name, default, sql_type_metadata, null, table_name, default_function = nil, collation = nil, native_type = nil)
-        ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, default_function, collation, native_type)
+      def new_column(name, default, sql_type_metadata, null, table_name, native_type = nil)
+        ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, native_type)
       end
 
       protected
@@ -147,6 +149,7 @@ module ActiveRecord
       # Here, ODBC and ODBC_UTF8 constants are interchangeable
       def initialize_type_map(map)
         map.register_type 'boolean',              Type::Boolean.new
+        map.register_type 'json',                 Type::Json.new
         map.register_type ODBC::SQL_CHAR,         Type::String.new
         map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
         map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
