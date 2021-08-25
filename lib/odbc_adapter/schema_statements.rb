@@ -14,7 +14,9 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop
 
+      db_regex = /^#{current_database}$/i
       result.each_with_object([]) do |row, table_names|
+        next unless row[0] =~ db_regex
         schema_name, table_name, table_type = row[1..3]
         next if respond_to?(:table_filtered?) && table_filtered?(schema_name, table_type)
         table_names << format_case(table_name)
@@ -36,7 +38,9 @@ module ODBCAdapter
       index_name = nil
       unique     = nil
 
+      db_regex = /^#{current_database}$/i
       result.each_with_object([]).with_index do |(row, indices), row_idx|
+        next unless row[0] =~ db_regex
         # Skip table statistics
         next if row[6].zero? # SQLStatistics: TYPE
 
@@ -63,7 +67,9 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop
 
+      db_regex = /^#{current_database}$/i
       result.each_with_object([]) do |col, cols|
+        next unless col[0] =~ db_regex
         col_name        = col[3]  # SQLColumns: COLUMN_NAME
         col_default     = col[12] # SQLColumns: COLUMN_DEF
         col_sql_type    = col[4]  # SQLColumns: DATA_TYPE
@@ -94,7 +100,9 @@ module ODBCAdapter
       stmt   = @connection.primary_keys(native_case(table_name.to_s))
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
-      result[0] && result[0][3]
+
+      db_regex = /^#{current_database}$/i
+      result.reduce(nil) { |pkey, key| key[0] =~ db_regex ? key[3] : pkey }
     end
 
     def foreign_keys(table_name)
@@ -102,7 +110,9 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
 
+      db_regex = /^#{current_database}$/i
       result.map do |key|
+        next unless key[0] =~ db_regex
         fk_from_table      = key[2]  # PKTABLE_NAME
         fk_to_table        = key[6]  # FKTABLE_NAME
 
