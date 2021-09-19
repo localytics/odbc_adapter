@@ -1,3 +1,4 @@
+require 'pry'
 require 'active_record'
 require 'arel/visitors/bind_visitor'
 require 'odbc'
@@ -60,6 +61,7 @@ module ActiveRecord
         driver.attrs = attrs
 
         connection = odbc_module::Database.new.drvconnect(driver)
+        connection.use_utc = true
         # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
         [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
       end
