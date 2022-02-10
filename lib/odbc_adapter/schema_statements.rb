@@ -14,8 +14,8 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop
 
-      db_regex = /^#{current_database}$/i
-      schema_regex = /^#{current_schema}$/i
+      db_regex = name_regex(current_database)
+      schema_regex = name_regex(current_schema)
       result.each_with_object([]) do |row, table_names|
         next unless row[0] =~ db_regex && row[1] =~ schema_regex
         schema_name, table_name, table_type = row[1..3]
@@ -39,8 +39,8 @@ module ODBCAdapter
       index_name = nil
       unique     = nil
 
-      db_regex = /^#{current_database}$/i
-      schema_regex = /^#{current_schema}$/i
+      db_regex = name_regex(current_database)
+      schema_regex = name_regex(current_schema)
       result.each_with_object([]).with_index do |(row, indices), row_idx|
         next unless row[0] =~ db_regex && row[1] =~ schema_regex
         # Skip table statistics
@@ -69,8 +69,8 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop
 
-      db_regex = /^#{current_database}$/i
-      schema_regex = /^#{current_schema}$/i
+      db_regex = name_regex(current_database)
+      schema_regex = name_regex(current_schema)
       result.each_with_object([]) do |col, cols|
         next unless col[0] =~ db_regex && row[1] =~ schema_regex
         col_name        = col[3]  # SQLColumns: COLUMN_NAME
@@ -104,8 +104,8 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
 
-      db_regex = /^#{current_database}$/i
-      schema_regex = /^#{current_schema}$/i
+      db_regex = name_regex(current_database)
+      schema_regex = name_regex(current_schema)
       result.reduce(nil) { |pkey, key| (key[0] =~ db_regex && key[1] =~ schema_regex) ? key[3] : pkey }
     end
 
@@ -114,8 +114,8 @@ module ODBCAdapter
       result = stmt.fetch_all || []
       stmt.drop unless stmt.nil?
 
-      db_regex = /^#{current_database}$/i
-      schema_regex = /^#{current_schema}$/i
+      db_regex = name_regex(current_database)
+      schema_regex = name_regex(current_schema)
       result.map do |key|
         next unless key[0] =~ db_regex && key[1] =~ schema_regex
         fk_from_table      = key[2]  # PKTABLE_NAME
@@ -146,6 +146,14 @@ module ODBCAdapter
 
     def current_schema
       @config[:driver].attrs['schema']
+    end
+
+    def name_regex(name)
+      if name =~ /^".*"$/
+        /^#{name.delete_prefix('"').delete_suffix('"')}$/
+      else
+        /^#{name}$/i
+      end
     end
   end
 end
