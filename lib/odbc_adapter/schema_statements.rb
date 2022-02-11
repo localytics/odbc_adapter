@@ -72,7 +72,7 @@ module ODBCAdapter
       db_regex = name_regex(current_database)
       schema_regex = name_regex(current_schema)
       result.each_with_object([]) do |col, cols|
-        next unless col[0] =~ db_regex && row[1] =~ schema_regex
+        next unless col[0] =~ db_regex && col[1] =~ schema_regex
         col_name        = col[3]  # SQLColumns: COLUMN_NAME
         col_default     = col[12] # SQLColumns: COLUMN_DEF
         col_sql_type    = col[4]  # SQLColumns: DATA_TYPE
