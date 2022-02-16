@@ -106,7 +106,7 @@ module ODBCAdapter
 
       db_regex = name_regex(current_database)
       schema_regex = name_regex(current_schema)
-      result.reduce(nil) { |pkey, key| (key[0] =~ db_regex && key[1] =~ schema_regex) ? key[3] : pkey }
+      result.reduce(nil) { |pkey, key| (key[0] =~ db_regex && key[1] =~ schema_regex) ? format_case(key[3]) : pkey }
     end
 
     def foreign_keys(table_name)
