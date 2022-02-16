@@ -83,12 +83,19 @@ module ODBCAdapter
         # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
         col_nullable = nullability(col_name, col[17], col[10])
 
-        args = { sql_type: col_sql_type, type: col_sql_type, limit: col_limit }
-        args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
-        args[:sql_type] = 'json' if col_native_type == self.class::VARIANT_TYPE || col_native_type == self.class::JSON_TYPE
-        args[:sql_type] = 'date' if col_native_type == self.class::DATE_TYPE
+        # This section has been customized for Snowflake and will not work in general.
+        args = { sql_type: col_native_type, type: col_native_type, limit: col_limit }
+        args[:type] = 'boolean' if col_native_type == "BOOLEAN"  # self.class::BOOLEAN_TYPE
+        args[:type] = 'json' if col_native_type == "VARIANT" || col_native_type == "JSON"
+        args[:type] = 'date' if col_native_type == "DATE"
+        args[:type] = 'string' if col_native_type == "VARCHAR"
+        args[:type] = 'datetime' if col_native_type == "TIMESTAMP"
+        args[:type] = 'time' if col_native_type == "TIME"
+        args[:type] = 'binary' if col_native_type == "BINARY"
+        args[:type] = 'float' if col_native_type == "DOUBLE"
 
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
+          args[:type] = col_scale == 0 ? 'integer' : 'decimal'
           args[:scale]     = col_scale || 0
           args[:precision] = col_limit
         end
