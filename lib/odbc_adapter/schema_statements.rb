@@ -83,18 +83,25 @@ module ODBCAdapter
         # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
         col_nullable = nullability(col_name, col[17], col[10])
 
-        args = { sql_type: col_sql_type, type: col_sql_type, limit: col_limit }
-        args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
-        args[:sql_type] = 'json' if col_native_type == self.class::VARIANT_TYPE || col_native_type == self.class::JSON_TYPE
-        args[:sql_type] = 'date' if col_native_type == self.class::DATE_TYPE
+        # This section has been customized for Snowflake and will not work in general.
+        args = { sql_type: col_native_type, type: col_native_type, limit: col_limit }
+        args[:type] = 'boolean' if col_native_type == "BOOLEAN"  # self.class::BOOLEAN_TYPE
+        args[:type] = 'json' if col_native_type == "VARIANT" || col_native_type == "JSON"
+        args[:type] = 'date' if col_native_type == "DATE"
+        args[:type] = 'string' if col_native_type == "VARCHAR"
+        args[:type] = 'datetime' if col_native_type == "TIMESTAMP"
+        args[:type] = 'time' if col_native_type == "TIME"
+        args[:type] = 'binary' if col_native_type == "BINARY"
+        args[:type] = 'float' if col_native_type == "DOUBLE"
 
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
+          args[:type] = col_scale == 0 ? 'integer' : 'decimal'
           args[:scale]     = col_scale || 0
           args[:precision] = col_limit
         end
         sql_type_metadata = ActiveRecord::ConnectionAdapters::SqlTypeMetadata.new(**args)
 
-        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, table_name, col_native_type)
+        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, col_native_type)
       end
     end
 
@@ -106,7 +113,7 @@ module ODBCAdapter
 
       db_regex = name_regex(current_database)
       schema_regex = name_regex(current_schema)
-      result.reduce(nil) { |pkey, key| (key[0] =~ db_regex && key[1] =~ schema_regex) ? key[3] : pkey }
+      result.reduce(nil) { |pkey, key| (key[0] =~ db_regex && key[1] =~ schema_regex) ? format_case(key[3]) : pkey }
     end
 
     def foreign_keys(table_name)
