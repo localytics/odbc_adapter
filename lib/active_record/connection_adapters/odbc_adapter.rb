@@ -182,7 +182,7 @@ module ActiveRecord
 
       # Translate an exception from the native DBMS to something usable by
       # ActiveRecord.
-      def translate_exception(exception, message)
+      def translate_exception(exception, message:, sql:, binds:)
         error_number = exception.message[/^\d+/].to_i
 
         if error_number == ERR_DUPLICATE_KEY_VALUE
