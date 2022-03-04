@@ -101,6 +101,13 @@ module ODBCAdapter
         end
         sql_type_metadata = ActiveRecord::ConnectionAdapters::SqlTypeMetadata.new(**args)
 
+        # The @connection.columns function returns empty strings for column defaults.
+        # Even when the column has a default value. This is a call to the ODBC layer
+        # with only enough Ruby to make the call happen. Replacing the empty string
+        # with nil permits Rails to set the current datetime for created_at and
+        # updated_at on model creates and updates.
+        col_default = nil if col_default == ""
+
         cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, col_native_type)
       end
     end
