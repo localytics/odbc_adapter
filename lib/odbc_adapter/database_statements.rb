@@ -1,3 +1,5 @@
+require "json"
+
 module ODBCAdapter
   module DatabaseStatements
     # ODBC constants missing from Christian Werner's Ruby ODBC driver
@@ -24,6 +26,7 @@ module ODBCAdapter
 
         columns = stmt.columns
         values  = stmt.to_a
+        # binding.pry
         stmt.drop
 
         values = dbms_type_cast(columns.values, values)
@@ -70,8 +73,68 @@ module ODBCAdapter
     # A custom hook to allow end users to overwrite the type casting before it
     # is returned to ActiveRecord. Useful before a full adapter has made its way
     # back into this repository.
-    def dbms_type_cast(_columns, values)
-      values
+    def dbms_type_cast(columns, rows)
+      # Cast the values to the correct type
+      columns.map.with_index do |column, col_index|
+        column_type = @connection.types(column.type).first[0]
+
+        # binding.pry
+        # @connection.types(3).columns.keys
+
+        # pp column
+        # pp "Column type: #{column.type} | #{@connection.types(column.type).first}"
+
+        rows.each_with_index do |row, row_index|
+          value = row[col_index]
+
+          binding.pry
+
+          new_value = case
+                      when ["CHAR", "VARCHAR", "LONGVARCHAR"].include?(column_type)
+                        # Do nothing, because the data defaults to strings
+                        # This also covers null values, as they are VARCHARs of length 0
+                        value = value.force_encoding("UTF-8") if value.is_a?(String)
+                        value
+                      when ["NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE"].include?(column_type)
+                        value.to_f
+                      when ["INTEGER"].include?(column_type)
+                        value.to_i
+                      when ["BOOLEAN"].include?(column_type)
+                        value == 1
+                      when ["DATE"].include?(column_type)
+                        value.to_date
+                      when ["TIME"].include?(column_type)
+                        value.to_time
+                      when ["TIMESTAMP", "TIMESTAMP_LTZ", "TIMESTAMP_NTZ", "TIMESTAMP_TZ"].include?(column_type)
+                        value.to_datetime
+                      when ["ARRAY", "OBJECT", "VARIANT"].include?(column_type)
+                        # TODO: "ARRAY", "OBJECT", "VARIANT" all return as VARCHAR
+                        # so we'd need to parse them to make them the correct type
+
+                        # As of now, we are just going to return the value as a string
+                        # and let the consumer handle it.  In the future, we could handle
+                        # if here, but there's not a good way to tell what the type is
+                        # without trying to parse the value as JSON as see if it works
+                        # JSON.parse(value)
+                      when ["BINARY", "VARBINARY"].include?(column_type)
+                        # These don't actually ever seem to return, even though they are
+                        # defined in the ODBC driver, but I left them in here just in case
+                        # so that future us can see what they should be
+                      else
+                        raise "Unknown column type: #{column_type}"
+                      end
+
+          pp "Column type: #{column_type}"
+          pp "Value: #{value}(#{value.class})"
+          pp "New Value: #{new_value}(#{new_value.class})"
+          # binding.pry
+
+          rows[row_index][col_index] = new_value
+          # .cast(row[cidx])
+        end
+
+        # @connection.types.to_a[3]
+      end
     end
 
     def bind_params(binds, sql)
