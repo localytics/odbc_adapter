@@ -1,5 +1,3 @@
-require "json"
-
 module ODBCAdapter
   module DatabaseStatements
     # ODBC constants missing from Christian Werner's Ruby ODBC driver
@@ -26,7 +24,6 @@ module ODBCAdapter
 
         columns = stmt.columns
         values  = stmt.to_a
-        # binding.pry
         stmt.drop
 
         values = dbms_type_cast(columns.values, values)
@@ -78,16 +75,8 @@ module ODBCAdapter
       columns.map.with_index do |column, col_index|
         column_type = @connection.types(column.type).first[0]
 
-        # binding.pry
-        # @connection.types(3).columns.keys
-
-        # pp column
-        # pp "Column type: #{column.type} | #{@connection.types(column.type).first}"
-
         rows.each_with_index do |row, row_index|
           value = row[col_index]
-
-          binding.pry
 
           new_value = case
                       when ["CHAR", "VARCHAR", "LONGVARCHAR"].include?(column_type)
@@ -124,16 +113,8 @@ module ODBCAdapter
                         raise "Unknown column type: #{column_type}"
                       end
 
-          pp "Column type: #{column_type}"
-          pp "Value: #{value}(#{value.class})"
-          pp "New Value: #{new_value}(#{new_value.class})"
-          # binding.pry
-
           rows[row_index][col_index] = new_value
-          # .cast(row[cidx])
         end
-
-        # @connection.types.to_a[3]
       end
     end
 
