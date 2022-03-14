@@ -79,6 +79,8 @@ module ODBCAdapter
           value = row[col_index]
 
           new_value = case
+                      when value.nil?
+                        nil
                       when ["CHAR", "VARCHAR", "LONGVARCHAR"].include?(column_type)
                         # Do nothing, because the data defaults to strings
                         # This also covers null values, as they are VARCHARs of length 0
