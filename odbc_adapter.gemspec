@@ -26,6 +26,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'minitest',  '~> 5.10'
   spec.add_development_dependency 'pry',       '~> 0.11'
   spec.add_development_dependency 'rake',      '~> 12.0'
-  spec.add_development_dependency 'rubocop',   '<= 0.58'
+  spec.add_development_dependency 'rubocop',   '~> 1.26.0'
   spec.add_development_dependency 'simplecov', '~> 0.14'
 end

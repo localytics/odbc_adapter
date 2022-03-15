@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - github_actions
+  pull_request:
+
+jobs:
+  RuboCop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ruby
+          bundler-cache: true
+      - run: |
+          bundle exec rubocop --color --format github --format clang

@@ -1,6 +1,6 @@
 require 'bundler/gem_tasks'
 
-task default: %i[rubocop test]
+task default: %i[test]
 
 desc 'Run rubocop'
 task :rubocop do
