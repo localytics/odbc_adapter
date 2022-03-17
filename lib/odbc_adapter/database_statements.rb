@@ -107,10 +107,12 @@ module ODBCAdapter
                         # if here, but there's not a good way to tell what the type is
                         # without trying to parse the value as JSON as see if it works
                         # JSON.parse(value)
+                        raise "Unhandled column type: #{column_type}"
                       when ["BINARY", "VARBINARY"].include?(column_type)
                         # These don't actually ever seem to return, even though they are
                         # defined in the ODBC driver, but I left them in here just in case
                         # so that future us can see what they should be
+                        raise "Unhandled column type: #{column_type}"
                       else
                         raise "Unknown column type: #{column_type}"
                       end
@@ -118,6 +120,7 @@ module ODBCAdapter
           rows[row_index][col_index] = new_value
         end
       end
+      rows
     end
 
     def bind_params(binds, sql)
