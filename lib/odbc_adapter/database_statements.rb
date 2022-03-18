@@ -72,33 +72,33 @@ module ODBCAdapter
     # back into this repository.
     def dbms_type_cast(columns, rows)
       # Cast the values to the correct type
-      columns.map.with_index do |column, col_index|
-        column_type = @connection.types(column.type).first[0]
-
-        rows.each_with_index do |row, row_index|
+      columns.each_with_index do |column, col_index|
+        #puts "  #{column.name}   type #{column.type}  length #{column.length}   nullable #{column.nullable}   scale #{column.scale}   precision #{column.precision}   searchable #{column.searchable}   unsigned #{column.unsigned}"
+        rows.each do |row|
           value = row[col_index]
 
           new_value = case
                       when value.nil?
                         nil
-                      when ["CHAR", "VARCHAR", "LONGVARCHAR"].include?(column_type)
+                      when [ODBC::SQL_CHAR, ODBC::SQL_VARCHAR, ODBC::SQL_LONGVARCHAR].include?(column.type)
                         # Do nothing, because the data defaults to strings
                         # This also covers null values, as they are VARCHARs of length 0
-                        value = value.force_encoding("UTF-8") if value.is_a?(String)
-                        value
-                      when ["NUMERIC", "DECIMAL", "FLOAT", "REAL", "DOUBLE"].include?(column_type)
+                        value.is_a?(String) ? value.force_encoding("UTF-8") : value
+                      when [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(column.type)
+                        column.scale == 0 ? value.to_i : value.to_f
+                      when [ODBC::SQL_REAL, ODBC::SQL_FLOAT, ODBC::SQL_DOUBLE].include?(column.type)
                         value.to_f
-                      when ["INTEGER"].include?(column_type)
+                      when [ODBC::SQL_INTEGER, ODBC::SQL_SMALLINT, ODBC::SQL_TINYINT, ODBC::SQL_BIGINT].include?(column.type)
                         value.to_i
-                      when ["BOOLEAN"].include?(column_type)
+                      when [ODBC::SQL_BIT].include?(column.type)
                         value == 1
-                      when ["DATE"].include?(column_type)
+                      when [ODBC::SQL_DATE].include?(column.type)
                         value.to_date
-                      when ["TIME"].include?(column_type)
+                      when [ODBC::SQL_TIME].include?(column.type)
                         value.to_time
-                      when ["TIMESTAMP", "TIMESTAMP_LTZ", "TIMESTAMP_NTZ", "TIMESTAMP_TZ"].include?(column_type)
+                      when [ODBC::SQL_DATETIME, ODBC::SQL_TIMESTAMP].include?(column.type)
                         value.to_datetime
-                      when ["ARRAY", "OBJECT", "VARIANT"].include?(column_type)
+                      # when ["ARRAY"?, "OBJECT"?, "VARIANT"?].include?(column.type)
                         # TODO: "ARRAY", "OBJECT", "VARIANT" all return as VARCHAR
                         # so we'd need to parse them to make them the correct type
 
@@ -107,17 +107,17 @@ module ODBCAdapter
                         # if here, but there's not a good way to tell what the type is
                         # without trying to parse the value as JSON as see if it works
                         # JSON.parse(value)
-                        raise "Unhandled column type: #{column_type}"
-                      when ["BINARY", "VARBINARY"].include?(column_type)
+                      when [ODBC::SQL_BINARY].include?(column.type)
                         # These don't actually ever seem to return, even though they are
                         # defined in the ODBC driver, but I left them in here just in case
                         # so that future us can see what they should be
-                        raise "Unhandled column type: #{column_type}"
+                        value
                       else
-                        raise "Unknown column type: #{column_type}"
+                        # the use of @connection.types() results in a "was not dropped before garbage collection" warning.
+                        raise "Unknown column type: #{column.type}  #{@connection.types(column.type).first[0]}"
                       end
 
-          rows[row_index][col_index] = new_value
+          row[col_index] = new_value
         end
       end
       rows
