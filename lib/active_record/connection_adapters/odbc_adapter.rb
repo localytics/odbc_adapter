@@ -1,5 +1,4 @@
 require 'active_record'
-require 'arel/visitors/bind_visitor'
 require 'odbc'
 require 'odbc_utf8'
 
