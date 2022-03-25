@@ -5,11 +5,11 @@ require 'odbc_adapter/version'
 Gem::Specification.new do |spec|
   spec.name          = 'odbc_adapter'
   spec.version       = ODBCAdapter::VERSION
-  spec.authors       = ['Localytics']
-  spec.email         = ['oss@localytics.com']
+  spec.authors       = %w[BetterUp Localytics]
+  spec.email         = %w[support@betterup.co oss@localytics.com]
 
   spec.summary       = 'An ActiveRecord ODBC adapter'
-  spec.homepage      = 'https://github.com/localytics/odbc_adapter'
+  spec.homepage      = 'https://github.com/betterup/odbc_adapter'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
