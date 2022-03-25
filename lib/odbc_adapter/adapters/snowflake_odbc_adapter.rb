@@ -1,8 +1,10 @@
+require 'odbc_adapter/snowflake/schema_statements'
+
 module ODBCAdapter
   module Adapters
     # An adapter for use with Snowflake via ODBC
-    class SnowflakeODBCAdapter < NullODBCAdapter
-      include ::ODBCAdapter::Adapters::Snowflake::SchemaStatements
+    class SnowflakeODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
+      include ODBCAdapter::Snowflake::SchemaStatements
 
       def prepared_statements
         true
