@@ -6,8 +6,7 @@ module ODBCAdapter
       # Returns an array of table names, for database tables visible on the
       # current connection.
       def tables(_name = nil)
-        @connection.exec_query("select table_name from information_schema.tables where table_schema != 'INFORMATION_SCHEMA' and table_type = 'BASE TABLE'")
-                   .rows
+        @connection.run("select table_name from information_schema.tables where table_schema != 'INFORMATION_SCHEMA' and table_type = 'BASE TABLE'")
                    .map do |name_col|
           format_case(name_col.first)
         end
@@ -15,8 +14,7 @@ module ODBCAdapter
 
       # Returns an array of view names defined in the database.
       def views
-        @connection.exec_query("select table_name from information_schema.views where table_schema != 'INFORMATION_SCHEMA'")
-                   .rows
+        @connection.run("select table_name from information_schema.views where table_schema != 'INFORMATION_SCHEMA'")
                    .map do |name_col|
           format_case(name_col.first)
         end
@@ -33,8 +31,7 @@ module ODBCAdapter
       # +table_name+.
       def columns(table_name, _name = nil)
         # Prepared statements need to be fixed, so just interpolate for now. No user input here; should be fine.
-        @connection.exec_query("select column_name, column_default, data_type, character_maximum_length, numeric_scale, numeric_precision, is_nullable from information_schema.columns where table_schema != 'INFORMATION_SCHEMA' and table_name = '#{native_case(table_name.to_s)}'")
-                   .rows
+        @connection.run("select column_name, column_default, data_type, character_maximum_length, numeric_scale, numeric_precision, is_nullable from information_schema.columns where table_schema != 'INFORMATION_SCHEMA' and table_name = '#{native_case(table_name.to_s)}'")
                    .map do |col|
           col_name = col[0] # SQLColumns: COLUMN_NAME
           col_default = col[1] # SQLColumns: COLUMN_DEFAULT
