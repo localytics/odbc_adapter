@@ -38,5 +38,9 @@ module ODBCAdapter
         value.strftime('%Y-%m-%d') # Date
       end
     end
+
+    def lookup_cast_type_from_column(column) # :nodoc:
+      type_map.lookup(column.type)
+    end
   end
 end
