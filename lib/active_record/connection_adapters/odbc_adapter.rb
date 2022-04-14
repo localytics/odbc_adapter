@@ -145,39 +145,18 @@ module ActiveRecord
 
       protected
 
-      # Build the type map for ActiveRecord
-      # Here, ODBC and ODBC_UTF8 constants are interchangeable
+      #Snowflake ODBC Adapter specific
       def initialize_type_map(map)
-        map.register_type 'boolean',              Type::Boolean.new
-        map.register_type 'json',                 Type::Json.new
-        map.register_type ODBC::SQL_CHAR,         Type::String.new
-        map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
-        map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
-        map.register_type ODBC::SQL_SMALLINT,     Type::Integer.new(limit: 8)
-        map.register_type ODBC::SQL_INTEGER,      Type::Integer.new(limit: 16)
-        map.register_type ODBC::SQL_BIGINT,       Type::BigInteger.new(limit: 32)
-        map.register_type ODBC::SQL_REAL,         Type::Float.new(limit: 24)
-        map.register_type ODBC::SQL_FLOAT,        Type::Float.new
-        map.register_type ODBC::SQL_DOUBLE,       Type::Float.new(limit: 53)
-        map.register_type ODBC::SQL_DECIMAL,      Type::Float.new
-        map.register_type ODBC::SQL_NUMERIC,      Type::Integer.new
-        map.register_type ODBC::SQL_BINARY,       Type::Binary.new
-        map.register_type ODBC::SQL_DATE,         Type::Date.new
-        map.register_type ODBC::SQL_DATETIME,     Type::DateTime.new
-        map.register_type ODBC::SQL_TIME,         Type::Time.new
-        map.register_type ODBC::SQL_TIMESTAMP,    Type::DateTime.new
-        map.register_type ODBC::SQL_GUID,         Type::String.new
-
-        alias_type map, ODBC::SQL_BIT,            'boolean'
-        alias_type map, ODBC::SQL_VARCHAR,        ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WCHAR,          ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WVARCHAR,       ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WLONGVARCHAR,   ODBC::SQL_LONGVARCHAR
-        alias_type map, ODBC::SQL_VARBINARY,      ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_LONGVARBINARY,  ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_TYPE_DATE,      ODBC::SQL_DATE
-        alias_type map, ODBC::SQL_TYPE_TIME,      ODBC::SQL_TIME
-        alias_type map, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP
+        map.register_type :boolean,               Type::Boolean.new
+        map.register_type :json,                  Type::Json.new
+        map.register_type :date,                  Type::Date.new
+        map.register_type :string,                Type::String.new
+        map.register_type :datetime,              Type::DateTime.new
+        map.register_type :time,                  Type::Time.new
+        map.register_type :binary,                Type::Binary.new
+        map.register_type :float,                 Type::Float.new
+        map.register_type :integer,               Type::Integer.new
+        map.register_type :decimal,               Type::Decimal.new
       end
 
       # Translate an exception from the native DBMS to something usable by
