@@ -65,6 +65,10 @@ module ODBCAdapter
       "#{table}_seq"
     end
 
+    def empty_insert_statement_value(primary_key = nil)
+      "(#{primary_key}) VALUES (DEFAULT)"
+    end
+
     private
 
     # A custom hook to allow end users to overwrite the type casting before it

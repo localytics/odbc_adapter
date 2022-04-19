@@ -14,6 +14,8 @@ require 'odbc_adapter/database_metadata'
 require 'odbc_adapter/registry'
 require 'odbc_adapter/version'
 
+require 'odbc_adapter/type/array'
+
 module ActiveRecord
   class Base
     class << self
@@ -156,7 +158,9 @@ module ActiveRecord
         map.register_type :binary,                Type::Binary.new
         map.register_type :float,                 Type::Float.new
         map.register_type :integer,               Type::Integer.new
-        map.register_type :decimal,               Type::Decimal.new
+        map.register_type(:decimal) do |_sql_type, column_data|
+          Type::Decimal.new(precision: column_data.precision, scale: column_data.scale)
+        end
       end
 
       # Translate an exception from the native DBMS to something usable by
