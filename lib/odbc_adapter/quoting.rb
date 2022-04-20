@@ -40,7 +40,7 @@ module ODBCAdapter
     end
 
     def lookup_cast_type_from_column(column) # :nodoc:
-      type_map.lookup(column.type)
+      type_map.lookup(column.type, column)
     end
   end
 end
