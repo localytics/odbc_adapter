@@ -14,7 +14,7 @@ require 'odbc_adapter/database_metadata'
 require 'odbc_adapter/registry'
 require 'odbc_adapter/version'
 
-require 'odbc_adapter/type/array'
+require 'odbc_adapter/type/type'
 
 module ActiveRecord
   class Base
@@ -150,7 +150,6 @@ module ActiveRecord
       #Snowflake ODBC Adapter specific
       def initialize_type_map(map)
         map.register_type :boolean,               Type::Boolean.new
-        map.register_type :json,                  Type::Json.new
         map.register_type :date,                  Type::Date.new
         map.register_type :string,                Type::String.new
         map.register_type :datetime,              Type::DateTime.new
@@ -161,6 +160,9 @@ module ActiveRecord
         map.register_type(:decimal) do |_sql_type, column_data|
           Type::Decimal.new(precision: column_data.precision, scale: column_data.scale)
         end
+        map.register_type :object,                ::ODBCAdapter::Type::SnowflakeObject.new
+        map.register_type :array,                 ::ODBCAdapter::Type::ArrayOfValues.new
+        map.register_type :variant,               ::ODBCAdapter::Type::Variant.new
       end
 
       # Translate an exception from the native DBMS to something usable by

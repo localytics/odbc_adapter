@@ -42,5 +42,20 @@ module ODBCAdapter
     def lookup_cast_type_from_column(column) # :nodoc:
       type_map.lookup(column.type, column)
     end
+
+    def quote_hash(hash:)
+      "OBJECT_CONSTRUCT(" + hash.map {|key, value| quote(key) + "," + quote(value)}.join(",") + ")"
+    end
+
+    def quote_array(array:)
+      "ARRAY_CONSTRUCT(" + array.map { |element| quote(element) }.join(",") + ")"
+    end
+
+    def quote(value)
+      if value.is_a? Hash then return quote_hash hash: value end
+      if value.is_a? Array then return quote_array array: value end
+      if value.is_a? Type::SnowflakeVariant then return value.quote self end
+      super
+    end
   end
 end
