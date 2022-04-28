@@ -1,6 +1,7 @@
 require 'odbc_adapter/type/array_of'
 require 'odbc_adapter/type/object'
 require 'odbc_adapter/type/variant'
+require 'odbc_adapter/type/snowflake_integer'
 
 require 'odbc_adapter/type/internal/snowflake_variant'
 

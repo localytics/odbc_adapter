@@ -15,6 +15,7 @@ require 'odbc_adapter/registry'
 require 'odbc_adapter/version'
 
 require 'odbc_adapter/type/type'
+require 'odbc_adapter/concerns/concern'
 
 module ActiveRecord
   class Base
@@ -156,7 +157,7 @@ module ActiveRecord
         map.register_type :time,                  Type::Time.new
         map.register_type :binary,                Type::Binary.new
         map.register_type :float,                 Type::Float.new
-        map.register_type :integer,               Type::Integer.new
+        map.register_type :integer,               ::ODBCAdapter::Type::SnowflakeInteger.new
         map.register_type(:decimal) do |_sql_type, column_data|
           Type::Decimal.new(precision: column_data.precision, scale: column_data.scale)
         end
