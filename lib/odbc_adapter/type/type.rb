@@ -20,21 +20,23 @@ module ODBCAdapter
     ArrayOfTimes = array_of(ActiveRecord::Type::Time.new)
     ArrayOfValues = array_of(ActiveRecord::Type::Value.new)
 
-    ActiveRecord::Type.register(:array_of_big_integers, ArrayOfBigIntegers)
-    ActiveRecord::Type.register(:array_of_binaries, ArrayOfBinaries)
-    ActiveRecord::Type.register(:array_of_booleans, ArrayOfBooleans)
-    ActiveRecord::Type.register(:array_of_dates, ArrayOfDates)
-    ActiveRecord::Type.register(:array_of_date_times, ArrayOfDateTimes)
-    ActiveRecord::Type.register(:array_of_decimals, ArrayOfDecimals)
-    ActiveRecord::Type.register(:array_of_floats, ArrayOfFloats)
-    ActiveRecord::Type.register(:array_of_immutable_strings, ArrayOfImmutableStrings)
-    ActiveRecord::Type.register(:array_of_integers, ArrayOfIntegers)
-    ActiveRecord::Type.register(:array_of_strings, ArrayOfStrings)
-    ActiveRecord::Type.register(:array_of_times, ArrayOfTimes)
-    ActiveRecord::Type.register(:array_of_values, ArrayOfValues)
+    ActiveRecord::Type.register(:array_of_big_integers, ArrayOfBigIntegers, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_binaries, ArrayOfBinaries, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_booleans, ArrayOfBooleans, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_dates, ArrayOfDates, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_date_times, ArrayOfDateTimes, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_decimals, ArrayOfDecimals, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_floats, ArrayOfFloats, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_immutable_strings, ArrayOfImmutableStrings, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_integers, ArrayOfIntegers, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_strings, ArrayOfStrings, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_times, ArrayOfTimes, adapter: :odbc)
+    ActiveRecord::Type.register(:array_of_values, ArrayOfValues, adapter: :odbc)
 
-    ActiveRecord::Type.register(:object, Object)
+    ActiveRecord::Type.register(:object, Object, adapter: :odbc)
 
-    ActiveRecord::Type.register(:variant, Variant)
+    ActiveRecord::Type.register(:variant, Variant, adapter: :odbc)
+
+    ActiveRecord::Type.register(:integer, SnowflakeInteger, adapter: :odbc)
   end
 end

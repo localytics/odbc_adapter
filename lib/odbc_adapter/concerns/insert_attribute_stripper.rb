@@ -10,12 +10,12 @@ module ODBCAdapter
       def save(**options, &block)
         ActiveRecord::Base.transaction do
           if new_record?
-            striped_attributes = strip_unsafe_to_insert
-            if striped_attributes.any? then generate_id end
+            stripped_attributes = strip_unsafe_to_insert
+            if stripped_attributes.any? then generate_id end
           end
           pre_insert_attribute_stripper_save(**options, &block)
-          if striped_attributes.any?
-            restore_stripped_attributes(striped_attributes)
+          if stripped_attributes.any?
+            restore_stripped_attributes(stripped_attributes)
             pre_insert_attribute_stripper_save(**options, &block)
           end
         end
@@ -24,12 +24,12 @@ module ODBCAdapter
       def save!(**options, &block)
         ActiveRecord::Base.transaction do
           if new_record?
-            striped_attributes = strip_unsafe_to_insert
-            if striped_attributes.any? then generate_id end
+            stripped_attributes = strip_unsafe_to_insert
+            if stripped_attributes.any? then generate_id end
           end
           pre_insert_attribute_stripper_save!(**options, &block)
-          if striped_attributes.any?
-            restore_stripped_attributes(striped_attributes)
+          if stripped_attributes.any?
+            restore_stripped_attributes(stripped_attributes)
             pre_insert_attribute_stripper_save!(**options, &block)
           end
         end
@@ -40,14 +40,14 @@ module ODBCAdapter
       UNSAFE_INSERT_TYPES ||= %i(variant object array)
 
       def strip_unsafe_to_insert
-        striped_attributes = {}
+        stripped_attributes = {}
         self.class.columns.each do |column|
           if UNSAFE_INSERT_TYPES.include?(column.type) && attributes[column.name] != nil
-            striped_attributes[column.name] = attributes[column.name]
+            stripped_attributes[column.name] = attributes[column.name]
             self[column.name] = nil
           end
         end
-        striped_attributes
+        stripped_attributes
       end
 
       def restore_stripped_attributes(stripped_attributes)
