@@ -86,7 +86,9 @@ module ODBCAdapter
         args = { sql_type: col_native_type, type: col_native_type, limit: col_limit }
         args[:type] = case col_native_type
                       when "BOOLEAN" then :boolean
-                      when "VARIANT", "ARRAY", "STRUCT" then :json
+                      when "VARIANT" then :variant
+                      when "ARRAY" then :array
+                      when "STRUCT" then :object
                       when "DATE" then :date
                       when "VARCHAR" then :string
                       when "TIMESTAMP" then :datetime
