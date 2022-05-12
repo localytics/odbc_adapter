@@ -25,7 +25,7 @@ module ODBCAdapter
 
       def retrieve_id
         sequence_name = self.class.table_name + "_ID_SEQ"
-        ApplicationRecord.connection.exec_query("Select #{sequence_name}.nextval as new_id")[0]["new_id"]
+        self.class.connection.exec_query("Select #{sequence_name}.nextval as new_id")[0]["new_id"]
       end
     end
   end
