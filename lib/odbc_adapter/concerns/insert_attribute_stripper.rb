@@ -20,7 +20,7 @@ module ODBCAdapter
       UNSAFE_INSERT_TYPES ||= %i(variant object array)
 
       def save_internal(base_function, **options, &block)
-        ActiveRecord::Base.transaction do
+        self.class.transaction do
           if new_record?
             stripped_attributes = {}
             self.class.columns.each do |column|
