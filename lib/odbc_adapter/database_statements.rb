@@ -96,11 +96,11 @@ module ODBCAdapter
                         value.to_i
                       when [ODBC::SQL_BIT].include?(column.type)
                         value == 1
-                      when [ODBC::SQL_DATE].include?(column.type)
+                      when [ODBC::SQL_DATE, ODBC::SQL_TYPE_DATE].include?(column.type)
                         value.to_date
-                      when [ODBC::SQL_TIME].include?(column.type)
+                      when [ODBC::SQL_TIME, ODBC::SQL_TYPE_TIME].include?(column.type)
                         value.to_time
-                      when [ODBC::SQL_DATETIME, ODBC::SQL_TIMESTAMP].include?(column.type)
+                      when [ODBC::SQL_DATETIME, ODBC::SQL_TIMESTAMP, ODBC::SQL_TYPE_TIMESTAMP].include?(column.type)
                         value.to_datetime
                       # when ["ARRAY"?, "OBJECT"?, "VARIANT"?].include?(column.type)
                         # TODO: "ARRAY", "OBJECT", "VARIANT" all return as VARCHAR
