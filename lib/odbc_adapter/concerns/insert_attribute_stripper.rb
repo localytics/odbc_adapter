@@ -33,10 +33,12 @@ module ODBCAdapter
           else
             stripped_attributes = {}
           end
-          base_function.call(**options, &block)
+          first_call_result = base_function.call(**options, &block)
           if stripped_attributes.any?
             restore_stripped_attributes(stripped_attributes)
-            base_function.call(**options, &block)
+            return base_function.call(**options, &block)
+          else
+            return first_call_result
           end
         end
       end
