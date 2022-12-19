@@ -146,6 +146,15 @@ module ActiveRecord
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, native_type)
       end
 
+      #Snowflake doesn't have a mechanism to return the primary key on inserts, it needs prefetched
+      def prefetch_primary_key?(table_name = nil)
+        true
+      end
+
+      def next_sequence_value(table_name = nil)
+        exec_query("SELECT #{table_name}.NEXTVAL as new_id").first["new_id"]
+      end
+
       protected
 
       #Snowflake ODBC Adapter specific
