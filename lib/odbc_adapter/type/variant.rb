@@ -19,6 +19,10 @@ module ODBCAdapter
       def changed_in_place?(raw_old_value, new_value)
         deserialize(raw_old_value) != new_value
       end
+
+      def accessor
+        ActiveRecord::Store::StringKeyedHashAccessor
+      end
     end
   end
 end
