@@ -11,7 +11,7 @@ module ODBCAdapter
     # current connection.
     def tables(_name = nil)
       stmt   = @connection.tables
-      result = stmt.fetch_all || []
+      result = stmt.fetch || []
       stmt.drop
 
       result.each_with_object([]) do |row, table_names|
@@ -76,6 +76,8 @@ module ODBCAdapter
 
         args = { sql_type: col_sql_type, type: col_sql_type, limit: col_limit }
         args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
+        args[:sql_type] = 'json' if col_native_type == self.class::VARIANT_TYPE || col_native_type == self.class::JSON_TYPE
+        args[:sql_type] = 'date' if col_native_type == self.class::DATE_TYPE
 
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
           args[:scale]     = col_scale || 0

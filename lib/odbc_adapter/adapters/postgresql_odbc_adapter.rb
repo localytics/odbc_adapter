@@ -5,6 +5,9 @@ module ODBCAdapter
     class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
       BOOLEAN_TYPE = 'bool'.freeze
       PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
+      VARIANT_TYPE = 'VARIANT'.freeze
+      DATE_TYPE = 'DATE'.freeze
+      JSON_TYPE = 'JSON'.freeze
 
       alias create insert
 
@@ -35,7 +38,7 @@ module ODBCAdapter
         "#{table_name}_#{pk || 'id'}_seq"
       end
 
-      def sql_for_insert(sql, pk, _id_value, _sequence_name, binds)
+      def sql_for_insert(sql, pk, binds)
         unless pk
           table_ref = extract_table_ref_from_insert_sql(sql)
           pk = primary_key(table_ref) if table_ref
@@ -64,10 +67,11 @@ module ODBCAdapter
       end
 
       def disable_referential_integrity
-        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
-        yield
-      ensure
-        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
+        #yield
+        #ensure
+        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+        []
       end
 
       # Create a new PostgreSQL database. Options include <tt>:owner</tt>,
