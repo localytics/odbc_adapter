@@ -67,10 +67,11 @@ module ODBCAdapter
       end
 
       def disable_referential_integrity
-        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
-        yield
-      ensure
-        execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
+        #yield
+        #ensure
+        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+        []
       end
 
       # Create a new PostgreSQL database. Options include <tt>:owner</tt>,
