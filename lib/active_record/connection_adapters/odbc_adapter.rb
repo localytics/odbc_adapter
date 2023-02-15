@@ -203,7 +203,8 @@ module ActiveRecord
       # numeric
       def alias_type(map, new_type, old_type)
         map.register_type(new_type) do |_, *args|
-          map.lookup(old_type, *args)
+          puts "odbc_adapter  ConnectionAdapters  alias_type"
+          map.lookup(old_type)
         end
       end
 
