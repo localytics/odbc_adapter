@@ -73,10 +73,7 @@ module ActiveRecord
       include ::ODBCAdapter::SchemaStatements
 
       ADAPTER_NAME = 'ODBC'.freeze
-      BOOLEAN_TYPE = 'BOOLEAN'.freeze
       VARIANT_TYPE = 'VARIANT'.freeze
-      DATE_TYPE = 'DATE'.freeze
-      JSON_TYPE = 'JSON'.freeze
 
       ERR_DUPLICATE_KEY_VALUE                     = 23_505
       ERR_QUERY_TIMED_OUT                         = 57_014
@@ -143,41 +140,28 @@ module ActiveRecord
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, native_type)
       end
 
+      def clear_cache! # :nodoc:
+        reload_type_map
+        super
+      end
+
       protected
 
       # Build the type map for ActiveRecord
       # Here, ODBC and ODBC_UTF8 constants are interchangeable
-      def initialize_type_map(map)
-        map.register_type 'boolean',              Type::Boolean.new
-        map.register_type 'json',                 Type::Json.new
-        map.register_type ODBC::SQL_CHAR,         Type::String.new
-        map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
-        map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
-        map.register_type ODBC::SQL_SMALLINT,     Type::Integer.new(limit: 8)
-        map.register_type ODBC::SQL_INTEGER,      Type::Integer.new(limit: 16)
-        map.register_type ODBC::SQL_BIGINT,       Type::BigInteger.new(limit: 32)
-        map.register_type ODBC::SQL_REAL,         Type::Float.new(limit: 24)
-        map.register_type ODBC::SQL_FLOAT,        Type::Float.new
-        map.register_type ODBC::SQL_DOUBLE,       Type::Float.new(limit: 53)
-        map.register_type ODBC::SQL_DECIMAL,      Type::Float.new
-        map.register_type ODBC::SQL_NUMERIC,      Type::Integer.new
-        map.register_type ODBC::SQL_BINARY,       Type::Binary.new
-        map.register_type ODBC::SQL_DATE,         Type::Date.new
-        map.register_type ODBC::SQL_DATETIME,     Type::DateTime.new
-        map.register_type ODBC::SQL_TIME,         Type::Time.new
-        map.register_type ODBC::SQL_TIMESTAMP,    Type::DateTime.new
-        map.register_type ODBC::SQL_GUID,         Type::String.new
+      def initialize_type_map(m = type_map)
+        super
 
-        alias_type map, ODBC::SQL_BIT,            'boolean'
-        alias_type map, ODBC::SQL_VARCHAR,        ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WCHAR,          ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WVARCHAR,       ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WLONGVARCHAR,   ODBC::SQL_LONGVARCHAR
-        alias_type map, ODBC::SQL_VARBINARY,      ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_LONGVARBINARY,  ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_TYPE_DATE,      ODBC::SQL_DATE
-        alias_type map, ODBC::SQL_TYPE_TIME,      ODBC::SQL_TIME
-        alias_type map, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP
+        m.register_type  %r(bigint)i,           Type::BigInteger.new
+        m.alias_type "float4", "float"
+        m.alias_type "float8", "float"
+        m.alias_type "double", "decimal"
+        m.alias_type "number", "decimal"
+        m.alias_type "numeric", "decimal"
+        m.alias_type "real", "decimal"
+        m.alias_type "string", "char"
+        m.alias_type "bool", "boolean"
+        m.alias_type "varbinary", "binary"
       end
 
       # Translate an exception from the native DBMS to something usable by

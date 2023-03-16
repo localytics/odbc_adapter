@@ -3,11 +3,7 @@ module ODBCAdapter
     # Overrides specific to PostgreSQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
     class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      BOOLEAN_TYPE = 'BOOLEAN'.freeze
       PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
-      VARIANT_TYPE = 'VARIANT'.freeze
-      DATE_TYPE = 'DATE'.freeze
-      JSON_TYPE = 'JSON'.freeze
 
       alias create insert
 
