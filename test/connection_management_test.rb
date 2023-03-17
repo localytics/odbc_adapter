@@ -1,17 +1,22 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class ConnectionManagementTest < Minitest::Test
   def test_connection_management
-    assert conn.active?
+    assert_predicate conn, :active?
 
     conn.disconnect!
-    refute conn.active?
+
+    refute_predicate conn, :active?
 
     conn.disconnect!
-    refute conn.active?
+
+    refute_predicate conn, :active?
 
     conn.reconnect!
-    assert conn.active?
+
+    assert_predicate conn, :active?
   ensure
     conn.reconnect!
   end

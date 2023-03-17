@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class ConnectionFailTest < Minitest::Test
@@ -7,7 +9,7 @@ class ConnectionFailTest < Minitest::Test
     skip 'Only executed for MySQL' unless ActiveRecord::Base.connection.instance_values['config'][:conn_str].include? 'MySQL'
     begin
       conn.execute('KILL CONNECTION_ID();')
-    rescue => e
+    rescue StandardError => e
       puts "caught exception #{e}"
     end
     assert_raises(ODBCAdapter::ConnectionFailedError) { User.average(:letters).round(2) }

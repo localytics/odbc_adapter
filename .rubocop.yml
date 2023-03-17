@@ -8,9 +8,21 @@ AllCops:
   NewCops: enable
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.2
+  TargetRubyVersion: 2.7
   Exclude:
   - 'vendor/**/*'
 
 Minitest/MultipleAssertions:
   Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 170

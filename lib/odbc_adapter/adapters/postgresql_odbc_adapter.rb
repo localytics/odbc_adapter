@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   module Adapters
     # Overrides specific to PostgreSQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
     class PostgreSQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      PRIMARY_KEY  = 'SERIAL PRIMARY KEY'.freeze
+      PRIMARY_KEY  = 'SERIAL PRIMARY KEY'
 
       alias create insert
 
@@ -49,7 +51,8 @@ module ODBCAdapter
 
         case value
         when String
-          return super unless 'bytea' == column.native_type
+          return super unless column.native_type == 'bytea'
+
           { value: value, format: 1 }
         else
           super
@@ -63,10 +66,10 @@ module ODBCAdapter
       end
 
       def disable_referential_integrity
-        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
-        #yield
-        #ensure
-        #execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
+        # execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} DISABLE TRIGGER ALL" }.join(';'))
+        # yield
+        # ensure
+        # execute(tables.map { |name| "ALTER TABLE #{quote_table_name(name)} ENABLE TRIGGER ALL" }.join(';'))
         []
       end
 
@@ -115,7 +118,8 @@ module ODBCAdapter
       end
 
       def change_column(table_name, column_name, type, options = {})
-        execute("ALTER TABLE #{table_name} ALTER  #{column_name} TYPE #{type_to_sql(type, options[:limit], options[:precision], options[:scale])}")
+        execute("ALTER TABLE #{table_name} ALTER  #{column_name} TYPE #{type_to_sql(type, options[:limit],
+                                                                                    options[:precision], options[:scale])}")
         change_column_default(table_name, column_name, options[:default]) if options_include_default?(options)
       end
 
@@ -180,9 +184,9 @@ module ODBCAdapter
       private
 
       def serial_sequence(table, column)
-        result = exec_query(<<-eosql, 'SCHEMA')
+        result = exec_query(<<-EOSQL, 'SCHEMA')
           SELECT pg_get_serial_sequence('#{table}', '#{column}')
-        eosql
+        EOSQL
         result.rows.first.first
       end
     end

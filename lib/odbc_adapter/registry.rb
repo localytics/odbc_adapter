@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   class Registry
     attr_reader :dbs
 
     def initialize
       @dbs = {
-        /my.*sql/i  => :MySQL,
+        /my.*sql/i => :MySQL,
         /postgres/i => :PostgreSQL
       }
     end
@@ -16,7 +18,7 @@ module ODBCAdapter
           adapter if reported_name =~ pattern
         end
 
-      normalize_adapter(found && found.last || :Null)
+      normalize_adapter((found && found.last) || :Null)
     end
 
     def register(pattern, superclass = Object, &block)
@@ -27,6 +29,7 @@ module ODBCAdapter
 
     def normalize_adapter(adapter)
       return adapter unless adapter.is_a?(Symbol)
+
       require "odbc_adapter/adapters/#{adapter.downcase}_odbc_adapter"
       Adapters.const_get(:"#{adapter}ODBCAdapter")
     end

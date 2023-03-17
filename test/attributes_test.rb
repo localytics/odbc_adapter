@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class AttributesTest < Minitest::Test
   def test_booleans?
-    assert_equal true, Todo.first.published?
-    assert_equal false, Todo.last.published?
+    assert_predicate Todo.first, :published?
+    refute_predicate Todo.last, :published?
   end
 
   def test_integers

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_record'
 require 'odbc'
 require 'odbc_utf8'
@@ -38,8 +40,8 @@ module ActiveRecord
 
       # Connect using a predefined DSN.
       def odbc_dsn_connection(config)
-        username   = config[:username] ? config[:username].to_s : nil
-        password   = config[:password] ? config[:password].to_s : nil
+        username   = config[:username]&.to_s
+        password   = config[:password]&.to_s
         odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         connection = odbc_module.connect(config[:dsn], username, password)
 
@@ -52,7 +54,7 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        attrs = config[:conn_str].split(';').to_h { |option| option.split('=', 2) }
         odbc_module = attrs['ENCODING'] == 'utf8' ? ODBC_UTF8 : ODBC
         driver = odbc_module::Driver.new
         driver.name = 'odbc'
@@ -60,7 +62,8 @@ module ActiveRecord
 
         connection = odbc_module::Database.new.drvconnect(driver)
         # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
-        [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
+        [connection,
+         config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
       end
     end
   end
@@ -72,14 +75,14 @@ module ActiveRecord
       include ::ODBCAdapter::Quoting
       include ::ODBCAdapter::SchemaStatements
 
-      ADAPTER_NAME = 'ODBC'.freeze
-      VARIANT_TYPE = 'VARIANT'.freeze
+      ADAPTER_NAME = 'ODBC'
+      VARIANT_TYPE = 'VARIANT'
 
       ERR_DUPLICATE_KEY_VALUE                     = 23_505
       ERR_QUERY_TIMED_OUT                         = 57_014
-      ERR_QUERY_TIMED_OUT_MESSAGE                 = /Query has timed out/
-      ERR_CONNECTION_FAILED_REGEX                 = '^08[0S]0[12347]'.freeze
-      ERR_CONNECTION_FAILED_MESSAGE               = /Client connection failed/
+      ERR_QUERY_TIMED_OUT_MESSAGE                 = /Query has timed out/.freeze
+      ERR_CONNECTION_FAILED_REGEX                 = '^08[0S]0[12347]'
+      ERR_CONNECTION_FAILED_MESSAGE               = /Client connection failed/.freeze
 
       # The object that stores the information that is fetched from the DBMS
       # when a connection is first established.
@@ -139,6 +142,7 @@ module ActiveRecord
       def new_column(name, default, sql_type_metadata, null, table_name, native_type = nil)
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, native_type)
       end
+      # rubocop:enable Metrics/ParameterLists
 
       def clear_cache! # :nodoc:
         reload_type_map
@@ -182,7 +186,7 @@ module ActiveRecord
           begin
             reconnect!
             ::ODBCAdapter::ConnectionFailedError.new(message, exception)
-          rescue => e
+          rescue StandardError => e
             puts "unable to reconnect #{e}"
           end
         else
