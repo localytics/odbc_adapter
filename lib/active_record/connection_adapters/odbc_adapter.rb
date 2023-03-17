@@ -152,16 +152,21 @@ module ActiveRecord
       def initialize_type_map(m = type_map)
         super
 
-        m.register_type  %r(bigint)i,           Type::BigInteger.new
-        m.alias_type "float4", "float"
-        m.alias_type "float8", "float"
-        m.alias_type "double", "decimal"
-        m.alias_type "number", "decimal"
-        m.alias_type "numeric", "decimal"
-        m.alias_type "real", "decimal"
-        m.alias_type "string", "char"
-        m.alias_type "bool", "boolean"
-        m.alias_type "varbinary", "binary"
+        m.register_type(/bigint/i, Type::BigInteger.new)
+        m.alias_type 'float4', 'float'
+        m.alias_type 'float8', 'float'
+        m.alias_type 'double', 'decimal'
+        m.alias_type 'number', 'decimal'
+        m.alias_type 'numeric', 'decimal'
+        m.alias_type 'real', 'decimal'
+        m.alias_type 'string', 'char'
+        m.alias_type 'bool', 'boolean'
+        m.alias_type 'varbinary', 'binary'
+        m.alias_type 'variant', 'json'
+        m.alias_type 'object', 'json'
+        m.alias_type 'array', 'json'
+        m.alias_type 'geography', 'char'
+        m.alias_type 'geometry', 'char'
       end
 
       # Translate an exception from the native DBMS to something usable by
