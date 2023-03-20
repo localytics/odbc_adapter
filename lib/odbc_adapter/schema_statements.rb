@@ -13,7 +13,7 @@ module ODBCAdapter
     # current connection.
     def tables(_name = nil)
       stmt   = @connection.tables
-      result = stmt.fetch || []
+      result = stmt.fetch_all || []
       stmt.drop
 
       result.each_with_object([]) do |row, table_names|
