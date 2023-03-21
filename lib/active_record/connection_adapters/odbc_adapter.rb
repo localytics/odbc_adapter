@@ -160,7 +160,7 @@ module ActiveRecord
         m.alias_type 'float4', 'float'
         m.alias_type 'float8', 'float'
         m.alias_type 'double', 'float'
-        m.alias_type 'number', 'decimal'
+        m.alias_type 'number', 'float'
         m.alias_type 'numeric', 'decimal'
         m.alias_type 'real', 'float'
         m.alias_type 'string', 'char'
