@@ -159,10 +159,10 @@ module ActiveRecord
         m.register_type(/bigint/i, Type::BigInteger.new)
         m.alias_type 'float4', 'float'
         m.alias_type 'float8', 'float'
-        m.alias_type 'double', 'decimal'
+        m.alias_type 'double', 'float'
         m.alias_type 'number', 'decimal'
         m.alias_type 'numeric', 'decimal'
-        m.alias_type 'real', 'decimal'
+        m.alias_type 'real', 'float'
         m.alias_type 'string', 'char'
         m.alias_type 'bool', 'boolean'
         m.alias_type 'varbinary', 'binary'
