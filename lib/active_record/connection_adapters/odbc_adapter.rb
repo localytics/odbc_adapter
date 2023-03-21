@@ -160,17 +160,20 @@ module ActiveRecord
         m.alias_type 'float4', 'float'
         m.alias_type 'float8', 'float'
         m.alias_type 'double', 'float'
-        m.alias_type 'number', 'float'
+        m.alias_type 'number', 'decimal'
         m.alias_type 'numeric', 'decimal'
         m.alias_type 'real', 'float'
         m.alias_type 'string', 'char'
         m.alias_type 'bool', 'boolean'
         m.alias_type 'varbinary', 'binary'
         m.alias_type 'variant', 'json'
-        m.alias_type 'object', 'json'
-        m.alias_type 'array', 'json'
+        m.alias_type 'object', 'string'
+        m.alias_type 'array', 'string'
         m.alias_type 'geography', 'char'
         m.alias_type 'geometry', 'char'
+
+        # number() data types in Snowflake are interpreted as decimal and must be mapped back to a float
+        m.alias_type 'decimal',    'float' if @database_metadata&.dbms_name&.downcase == "snowflake"
       end
 
       # Translate an exception from the native DBMS to something usable by
