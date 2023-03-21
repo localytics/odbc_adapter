@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class CalculationsTest < Minitest::Test
@@ -8,6 +10,6 @@ class CalculationsTest < Minitest::Test
   end
 
   def test_average
-    assert_equal 10.33, User.average(:letters).round(2)
+    assert_in_delta(10.33, User.average(:letters).round(2))
   end
 end

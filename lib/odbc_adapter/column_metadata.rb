@@ -1,18 +1,20 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   class ColumnMetadata
     GENERICS = {
       primary_key: [ODBC::SQL_INTEGER, ODBC::SQL_SMALLINT],
-      string:      [ODBC::SQL_VARCHAR],
-      text:        [ODBC::SQL_LONGVARCHAR, ODBC::SQL_VARCHAR],
-      integer:     [ODBC::SQL_INTEGER, ODBC::SQL_SMALLINT],
-      decimal:     [ODBC::SQL_NUMERIC, ODBC::SQL_DECIMAL],
-      float:       [ODBC::SQL_DOUBLE, ODBC::SQL_REAL],
-      datetime:    [ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
-      timestamp:   [ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
-      time:        [ODBC::SQL_TYPE_TIME, ODBC::SQL_TIME, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
-      date:        [ODBC::SQL_TYPE_DATE, ODBC::SQL_DATE, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
-      binary:      [ODBC::SQL_LONGVARBINARY, ODBC::SQL_VARBINARY],
-      boolean:     [ODBC::SQL_BIT, ODBC::SQL_TINYINT, ODBC::SQL_SMALLINT, ODBC::SQL_INTEGER]
+      string: [ODBC::SQL_VARCHAR],
+      text: [ODBC::SQL_LONGVARCHAR, ODBC::SQL_VARCHAR],
+      integer: [ODBC::SQL_INTEGER, ODBC::SQL_SMALLINT],
+      decimal: [ODBC::SQL_NUMERIC, ODBC::SQL_DECIMAL],
+      float: [ODBC::SQL_DOUBLE, ODBC::SQL_REAL],
+      datetime: [ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
+      timestamp: [ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
+      time: [ODBC::SQL_TYPE_TIME, ODBC::SQL_TIME, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
+      date: [ODBC::SQL_TYPE_DATE, ODBC::SQL_DATE, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP],
+      binary: [ODBC::SQL_LONGVARBINARY, ODBC::SQL_VARBINARY],
+      boolean: [ODBC::SQL_BIT, ODBC::SQL_TINYINT, ODBC::SQL_SMALLINT, ODBC::SQL_INTEGER]
     }.freeze
 
     attr_reader :adapter
@@ -27,6 +29,7 @@ module ODBCAdapter
       GENERICS.each_with_object({}) do |(abstract, candidates), mapped|
         candidates.detect do |candidate|
           next unless grouped[candidate]
+
           mapped[abstract] = native_type_mapping(abstract, grouped[candidate])
         end
       end
@@ -41,6 +44,7 @@ module ODBCAdapter
       # ODBC doesn't provide any info on a DBMS's native syntax for
       # autoincrement columns. So we use a lookup instead.
       return adapter.class::PRIMARY_KEY if abstract == :primary_key
+
       selected_row = rows[0]
 
       # If more than one native type corresponds to the SQL type we're
@@ -69,7 +73,7 @@ module ODBCAdapter
           stmt = adapter.raw_connection.types
           stmt.fetch_all
         ensure
-          stmt.drop unless stmt.nil?
+          stmt&.drop
         end
     end
   end

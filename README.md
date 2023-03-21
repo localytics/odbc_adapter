@@ -67,6 +67,93 @@ docker run -it --rm -v $(pwd):/workspace -v /tmp/mysql:/var/lib/mysql odbc-dev:l
 docker/test.sh
 ```
 
+## Datatype References
+
+
+Reference https://docs.snowflake.com/en/sql-reference/intro-summary-data-types
+
+https://github.com/rails/rails/blob/main/activerecord/lib/active_record/connection_adapters/abstract_adapter.rb#L877-L908
+
+```
+["number",
+ "decimal",
+ "numeric",
+ "int",
+ "integer",
+ "bigint",
+ "smallint",
+ "tinyint",
+ "byteint",
+ "float",
+ "float4",
+ "float8",
+ "double",
+ "real",
+ "varchar",
+ "char",
+ "character",
+ "string",
+ "text",
+ "binary",
+ "varbinary",
+ "boolean",
+ "date",
+ "datetime",
+ "time",
+ "timestamp",
+ "timestamp_ltz",
+ "timestamp_ntz",
+ "timestamp_tz",
+ "variant",
+ "object",
+ "array",
+ "geography",
+ "geometry"]
+```
+
+
+Possible mapping from chatgpt
+
+| Snowflake Data Type   | Ruby ActiveRecord Type | PostgreSQL Type  |
+| --------------------- | ---------------------- | ---------------- |
+| number                | :decimal               |  numeric
+| decimal               | :decimal               |  numeric
+| numeric               | :decimal               |  numeric
+| int                   | :integer               |  integer
+| integer               | :integer               |  integer
+| bigint                | :bigint                |  bigint
+| smallint              | :integer               |  smallint
+| tinyint               | :integer               |  smallint
+| byteint               | :integer               |  smallint
+| float                 | :float                 |  double precision
+| float4                | :float                 |  real
+| float8                | :float                 |  double precision
+| double                | :float                 |  double precision
+| real                  | :float                 |  real
+| varchar               | :string                |  character varying
+| char                  | :string                |  character
+| character             | :string                |  character
+| string                | :string                |  character varying
+| text                  | :text                  |  text
+| binary                | :binary                |  bytea
+| varbinary             | :binary                |  bytea
+| boolean               | :boolean               |  boolean
+| date                  | :date                  |  date
+| datetime              | :datetime              |  timestamp without time zone
+| time                  | :time                  |  time without time zone
+| timestamp             | :timestamp             |  timestamp without time zone
+| timestamp_ltz         | :timestamp             |  timestamp without time zone
+| timestamp_ntz         | :timestamp             |  timestamp without time zone
+| timestamp_tz          | :timestamp             |  timestamp with time zone
+| variant               | :jsonb                 |  jsonb
+| object                | :jsonb                 |  jsonb
+| array                 | :jsonb                 |  jsonb
+| geography             | :st_point, :st_polygon,|  geography
+|                       | :st_multipolygon       |
+| geometry              | :st_point, :st_polygon,|  geometry
+|                       | :st_multipolygon       |
+
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/localytics/odbc_adapter.

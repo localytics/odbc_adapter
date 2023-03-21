@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   module DatabaseStatements
     # ODBC constants missing from Christian Werner's Ruby ODBC driver

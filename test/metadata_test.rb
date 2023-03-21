@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class MetadataTest < Minitest::Test
@@ -7,6 +9,7 @@ class MetadataTest < Minitest::Test
 
   def test_column_names
     expected = %w[created_at first_name id last_name letters updated_at]
+
     assert_equal expected, User.column_names.sort
   end
 

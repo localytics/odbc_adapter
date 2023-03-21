@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   module DatabaseLimits
     # Returns the maximum length of a table name.

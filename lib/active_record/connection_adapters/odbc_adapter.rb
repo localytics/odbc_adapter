@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'active_record'
 require 'odbc'
 require 'odbc_utf8'
@@ -38,8 +40,8 @@ module ActiveRecord
 
       # Connect using a predefined DSN.
       def odbc_dsn_connection(config)
-        username   = config[:username] ? config[:username].to_s : nil
-        password   = config[:password] ? config[:password].to_s : nil
+        username   = config[:username]&.to_s
+        password   = config[:password]&.to_s
         odbc_module = config[:encoding] == 'utf8' ? ODBC_UTF8 : ODBC
         connection = odbc_module.connect(config[:dsn], username, password)
 
@@ -52,7 +54,7 @@ module ActiveRecord
       # e.g. "DSN=virt5;UID=rails;PWD=rails"
       #      "DRIVER={OpenLink Virtuoso};HOST=carlmbp;UID=rails;PWD=rails"
       def odbc_conn_str_connection(config)
-        attrs = config[:conn_str].split(';').map { |option| option.split('=', 2) }.to_h
+        attrs = config[:conn_str].split(';').to_h { |option| option.split('=', 2) }
         odbc_module = attrs['ENCODING'] == 'utf8' ? ODBC_UTF8 : ODBC
         driver = odbc_module::Driver.new
         driver.name = 'odbc'
@@ -60,7 +62,8 @@ module ActiveRecord
 
         connection = odbc_module::Database.new.drvconnect(driver)
         # encoding_bug indicates that the driver is using non ASCII and has the issue referenced here https://github.com/larskanis/ruby-odbc/issues/2
-        [connection, config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
+        [connection,
+         config.merge(driver: driver, encoding: attrs['ENCODING'], encoding_bug: attrs['ENCODING'] == 'utf8')]
       end
     end
   end
@@ -72,17 +75,14 @@ module ActiveRecord
       include ::ODBCAdapter::Quoting
       include ::ODBCAdapter::SchemaStatements
 
-      ADAPTER_NAME = 'ODBC'.freeze
-      BOOLEAN_TYPE = 'BOOLEAN'.freeze
-      VARIANT_TYPE = 'VARIANT'.freeze
-      DATE_TYPE = 'DATE'.freeze
-      JSON_TYPE = 'JSON'.freeze
+      ADAPTER_NAME = 'ODBC'
+      VARIANT_TYPE = 'VARIANT'
 
       ERR_DUPLICATE_KEY_VALUE                     = 23_505
       ERR_QUERY_TIMED_OUT                         = 57_014
-      ERR_QUERY_TIMED_OUT_MESSAGE                 = /Query has timed out/
-      ERR_CONNECTION_FAILED_REGEX                 = '^08[0S]0[12347]'.freeze
-      ERR_CONNECTION_FAILED_MESSAGE               = /Client connection failed/
+      ERR_QUERY_TIMED_OUT_MESSAGE                 = /Query has timed out/.freeze
+      ERR_CONNECTION_FAILED_REGEX                 = '^08[0S]0[12347]'
+      ERR_CONNECTION_FAILED_MESSAGE               = /Client connection failed/.freeze
 
       # The object that stores the information that is fetched from the DBMS
       # when a connection is first established.
@@ -142,42 +142,35 @@ module ActiveRecord
       def new_column(name, default, sql_type_metadata, null, table_name, native_type = nil)
         ::ODBCAdapter::Column.new(name, default, sql_type_metadata, null, table_name, native_type)
       end
+      # rubocop:enable Metrics/ParameterLists
+
+      def clear_cache! # :nodoc:
+        reload_type_map
+        super
+      end
 
       protected
 
       # Build the type map for ActiveRecord
       # Here, ODBC and ODBC_UTF8 constants are interchangeable
-      def initialize_type_map(map)
-        map.register_type 'boolean',              Type::Boolean.new
-        map.register_type 'json',                 Type::Json.new
-        map.register_type ODBC::SQL_CHAR,         Type::String.new
-        map.register_type ODBC::SQL_LONGVARCHAR,  Type::Text.new
-        map.register_type ODBC::SQL_TINYINT,      Type::Integer.new(limit: 4)
-        map.register_type ODBC::SQL_SMALLINT,     Type::Integer.new(limit: 8)
-        map.register_type ODBC::SQL_INTEGER,      Type::Integer.new(limit: 16)
-        map.register_type ODBC::SQL_BIGINT,       Type::BigInteger.new(limit: 32)
-        map.register_type ODBC::SQL_REAL,         Type::Float.new(limit: 24)
-        map.register_type ODBC::SQL_FLOAT,        Type::Float.new
-        map.register_type ODBC::SQL_DOUBLE,       Type::Float.new(limit: 53)
-        map.register_type ODBC::SQL_DECIMAL,      Type::Float.new
-        map.register_type ODBC::SQL_NUMERIC,      Type::Integer.new
-        map.register_type ODBC::SQL_BINARY,       Type::Binary.new
-        map.register_type ODBC::SQL_DATE,         Type::Date.new
-        map.register_type ODBC::SQL_DATETIME,     Type::DateTime.new
-        map.register_type ODBC::SQL_TIME,         Type::Time.new
-        map.register_type ODBC::SQL_TIMESTAMP,    Type::DateTime.new
-        map.register_type ODBC::SQL_GUID,         Type::String.new
+      def initialize_type_map(m = type_map)
+        super
 
-        alias_type map, ODBC::SQL_BIT,            'boolean'
-        alias_type map, ODBC::SQL_VARCHAR,        ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WCHAR,          ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WVARCHAR,       ODBC::SQL_CHAR
-        alias_type map, ODBC::SQL_WLONGVARCHAR,   ODBC::SQL_LONGVARCHAR
-        alias_type map, ODBC::SQL_VARBINARY,      ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_LONGVARBINARY,  ODBC::SQL_BINARY
-        alias_type map, ODBC::SQL_TYPE_DATE,      ODBC::SQL_DATE
-        alias_type map, ODBC::SQL_TYPE_TIME,      ODBC::SQL_TIME
-        alias_type map, ODBC::SQL_TYPE_TIMESTAMP, ODBC::SQL_TIMESTAMP
+        m.register_type(/bigint/i, Type::BigInteger.new)
+        m.alias_type 'float4', 'float'
+        m.alias_type 'float8', 'float'
+        m.alias_type 'double', 'float'
+        m.alias_type 'number', 'decimal'
+        m.alias_type 'numeric', 'decimal'
+        m.alias_type 'real', 'float'
+        m.alias_type 'string', 'char'
+        m.alias_type 'bool', 'boolean'
+        m.alias_type 'varbinary', 'binary'
+        m.alias_type 'variant', 'json'
+        m.alias_type 'object', 'json'
+        m.alias_type 'array', 'json'
+        m.alias_type 'geography', 'char'
+        m.alias_type 'geometry', 'char'
       end
 
       # Translate an exception from the native DBMS to something usable by
@@ -193,7 +186,7 @@ module ActiveRecord
           begin
             reconnect!
             ::ODBCAdapter::ConnectionFailedError.new(message, exception)
-          rescue => e
+          rescue StandardError => e
             puts "unable to reconnect #{e}"
           end
         else

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   module SchemaStatements
     # Returns a Hash of mappings from the abstract data types to the native
@@ -11,12 +13,13 @@ module ODBCAdapter
     # current connection.
     def tables(_name = nil)
       stmt   = @connection.tables
-      result = stmt.fetch || []
+      result = stmt.fetch_all || []
       stmt.drop
 
       result.each_with_object([]) do |row, table_names|
         schema_name, table_name, table_type = row[1..3]
         next if respond_to?(:table_filtered?) && table_filtered?(schema_name, table_type)
+
         table_names << format_case(table_name)
       end
     end
@@ -30,7 +33,7 @@ module ODBCAdapter
     def indexes(table_name, _name = nil)
       stmt   = @connection.indexes(native_case(table_name.to_s))
       result = stmt.fetch_all || []
-      stmt.drop unless stmt.nil?
+      stmt&.drop
 
       index_cols = []
       index_name = nil
@@ -51,7 +54,8 @@ module ODBCAdapter
         next_row = result[row_idx + 1]
 
         if (row_idx == result.length - 1) || (next_row[6].zero? || next_row[7] == 1)
-          indices << ActiveRecord::ConnectionAdapters::IndexDefinition.new(table_name, format_case(index_name), unique, index_cols)
+          indices << ActiveRecord::ConnectionAdapters::IndexDefinition.new(table_name, format_case(index_name), unique,
+                                                                           index_cols)
         end
       end
     end
@@ -74,10 +78,7 @@ module ODBCAdapter
         # SQLColumns: IS_NULLABLE, SQLColumns: NULLABLE
         col_nullable = nullability(col_name, col[17], col[10])
 
-        args = { sql_type: col_sql_type, type: col_sql_type, limit: col_limit }
-        args[:sql_type] = 'boolean' if col_native_type == self.class::BOOLEAN_TYPE
-        args[:sql_type] = 'json' if col_native_type == self.class::VARIANT_TYPE || col_native_type == self.class::JSON_TYPE
-        args[:sql_type] = 'date' if col_native_type == self.class::DATE_TYPE
+        args = { sql_type: col_native_type.downcase, type: col_sql_type, limit: col_limit }
 
         if [ODBC::SQL_DECIMAL, ODBC::SQL_NUMERIC].include?(col_sql_type)
           args[:scale]     = col_scale || 0
@@ -85,7 +86,8 @@ module ODBCAdapter
         end
         sql_type_metadata = ActiveRecord::ConnectionAdapters::SqlTypeMetadata.new(**args)
 
-        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, table_name, col_native_type)
+        cols << new_column(format_case(col_name), col_default, sql_type_metadata, col_nullable, table_name,
+                           col_native_type)
       end
     end
 
@@ -93,14 +95,14 @@ module ODBCAdapter
     def primary_key(table_name)
       stmt   = @connection.primary_keys(native_case(table_name.to_s))
       result = stmt.fetch_all || []
-      stmt.drop unless stmt.nil?
+      stmt&.drop
       result[0] && result[0][3]
     end
 
     def foreign_keys(table_name)
       stmt   = @connection.foreign_keys(native_case(table_name.to_s))
       result = stmt.fetch_all || []
-      stmt.drop unless stmt.nil?
+      stmt&.drop
 
       result.map do |key|
         fk_from_table      = key[2]  # PKTABLE_NAME
@@ -109,11 +111,11 @@ module ODBCAdapter
         ActiveRecord::ConnectionAdapters::ForeignKeyDefinition.new(
           fk_from_table,
           fk_to_table,
-          name:        key[11], # FK_NAME
-          column:      key[3],  # PKCOLUMN_NAME
-          primary_key: key[7],  # FKCOLUMN_NAME
-          on_delete:   key[10], # DELETE_RULE
-          on_update:   key[9]   # UPDATE_RULE
+          name: key[11], # FK_NAME
+          column: key[3], # PKCOLUMN_NAME
+          primary_key: key[7], # FKCOLUMN_NAME
+          on_delete: key[10], # DELETE_RULE
+          on_update: key[9]   # UPDATE_RULE
         )
       end
     end
