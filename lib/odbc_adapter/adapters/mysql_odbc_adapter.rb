@@ -1,16 +1,14 @@
+# frozen_string_literal: true
+
 module ODBCAdapter
   module Adapters
     # Overrides specific to MySQL. Mostly taken from
     # ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter
     class MySQLODBCAdapter < ActiveRecord::ConnectionAdapters::ODBCAdapter
-      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'.freeze
-
-      class BindSubstitution < Arel::Visitors::MySQL
-        include Arel::Visitors::BindVisitor
-      end
+      PRIMARY_KEY = 'INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY'
 
       def arel_visitor
-        BindSubstitution.new(self)
+        Arel::Visitors::MySQL.new(self)
       end
 
       # Explicitly turning off prepared statements in the MySQL adapter because
@@ -94,11 +92,10 @@ module ODBCAdapter
       end
 
       def change_column(table_name, column_name, type, options = {})
-        unless options_include_default?(options)
-          options[:default] = column_for(table_name, column_name).default
-        end
+        options[:default] = column_for(table_name, column_name).default unless options_include_default?(options)
 
-        change_column_sql = "ALTER TABLE #{table_name} CHANGE #{column_name} #{column_name} #{type_to_sql(type, options[:limit], options[:precision], options[:scale])}"
+        change_column_sql = "ALTER TABLE #{table_name} CHANGE #{column_name} #{column_name} #{type_to_sql(type,
+                                                                                                          options[:limit], options[:precision], options[:scale])}"
         add_column_options!(change_column_sql, options)
         execute(change_column_sql)
       end
@@ -133,11 +130,7 @@ module ODBCAdapter
       # MySQL 5.x doesn't allow DEFAULT NULL for first timestamp column in a
       # table
       def options_include_default?(options)
-        if options.include?(:default) && options[:default].nil?
-          if options.include?(:column) && options[:column].native_type =~ /timestamp/i
-            options.delete(:default)
-          end
-        end
+        options.delete(:default) if options.include?(:default) && options[:default].nil? && (options.include?(:column) && options[:column].native_type =~ /timestamp/i)
         super(options)
       end
 

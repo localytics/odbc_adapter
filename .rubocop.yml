@@ -1,35 +1,28 @@
+require:
+    - rubocop-rake
+    - rubocop-minitest
+
+inherit_from: .rubocop_todo.yml
+
 AllCops:
+  NewCops: enable
   DisplayCopNames: true
   DisplayStyleGuide: true
-  TargetRubyVersion: 2.1
+  TargetRubyVersion: 2.7
   Exclude:
   - 'vendor/**/*'
 
-Lint/AmbiguousBlockAssociation:
-  Enabled: false
-
-Metrics/AbcSize:
-  Enabled: false
-
-Metrics/ClassLength:
-  Enabled: false
-
-Metrics/CyclomaticComplexity:
+Minitest/MultipleAssertions:
   Enabled: false
 
 Metrics/MethodLength:
   Enabled: false
 
-Metrics/LineLength:
-  Enabled: false
-
-Metrics/PerceivedComplexity:
-  Enabled: false
-
 Style/Documentation:
   Enabled: false
 
-Style/PercentLiteralDelimiters:
-  PreferredDelimiters:
-    default: '[]'
-    '%r': '{}'
+Metrics/ClassLength:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 170
