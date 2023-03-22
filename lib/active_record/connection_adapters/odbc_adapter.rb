@@ -173,7 +173,7 @@ module ActiveRecord
         m.alias_type 'geometry', 'char'
 
         # number() data types in Snowflake are interpreted as decimal and must be mapped back to a float
-        m.alias_type 'decimal',    'float' if @database_metadata&.dbms_name&.downcase == "snowflake"
+        m.alias_type 'decimal', 'float'
       end
 
       # Translate an exception from the native DBMS to something usable by
